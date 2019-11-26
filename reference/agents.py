@@ -156,6 +156,7 @@ class BaseAgent(object):
 
 
 class TrainAgent(BaseAgent):
+    """Agent class to train reference game witness functions."""
     
     def _load_datasets(self):
         train_transforms = transforms.ToTensor()
@@ -346,7 +347,15 @@ class TrainAgent(BaseAgent):
         save_checkpoint(out_dict, is_best, filename=filename,
                         folder=self.config.checkpoint_dir)
     
-    def load_checkpoint(self, filename, load_epoch=True, load_model=True, load_optim=True):
+    def load_checkpoint(
+            self, 
+            filename, 
+            checkpoint_dir = None, 
+            load_epoch = True, 
+            load_model = True, 
+            load_optim = True,
+        ):
+        checkpoint_dir = checkpoint_dir or self.config.checkpoint_dir
         filename = os.path.join(self.config.checkpoint_dir, filename)
         try:
             self.logger.info("Loading checkpoint '{}'".format(filename))
@@ -370,3 +379,129 @@ class TrainAgent(BaseAgent):
         except OSError as e:
             self.logger.info("Checkpoint doesnt exists: [{}]".format(filename))
             raise e
+
+
+class EvaluateAgent(object):
+    """Agent class to evaluate trained models."""
+
+    def __init__(
+            self, 
+            checkpoint_dir, 
+            checkpoint_name = 'model_best.pth.tar',
+        ):
+        
+        super().__init__()
+        
+        self.logger = logging.getLogger("Agent")
+
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint = torch.load(os.path.join(checkpoint_dir, checkpoint_name))
+        self.config = self.checkpoint.config
+        self.agent = TrainAgent(self.config)
+        self.agent.load_checkpoint(
+            checkpoint_name, 
+            checkpoint_dir = checkpoint_dir, 
+            load_model = True,
+            load_epoch = False, 
+            load_optim = False,
+        )
+
+        self._load_datasets()
+        self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
+        self.test_losses = []
+        self.test_accs = []
+
+    def _load_datasets(self):
+        tests_transforms = transforms.ToTensor()
+        test_dataset = ChairsInContext(
+            self.config.data_dir,
+            data_size = self.config.data.data_size,
+            vocab = self.agent.train_dataset.vocab,
+            split = 'test',
+            context_condition = self.config.data.context_condition,
+            split_mode = self.config.data.split_mode, 
+            image_size = self.config.data.image_size, 
+            train_frac = 0.64,
+            val_frac = 0.16,
+            image_transform = test_transforms,
+        )
+        self.test_dataset = test_dataset
+        self.vocab = self.agent.train_dataset.vocab
+        self.vocab_size = len(self.vocab['w2i'])
+
+    def _create_dataloader(self, dataset):
+        dataset_size = len(dataset)
+        loader = DataLoader(
+            dataset, 
+            batch_size = self.config.optim_params.batch_size, 
+            shuffle = True, 
+            num_workers = self.config.data_loader_workers,
+        )
+        
+        return loader, dataset_size
+
+    def test(self):
+        num_batches = self.test_len // self.config.optim.batch_size
+        tqdm_batch = tqdm(total=num_batches, desc="[Test]")
+
+        self.model.eval()
+
+        epoch_loss = AverageMeter()
+        num_correct = 0.
+        num_total = 0.
+
+        with torch.no_grad():
+            for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.test_loader:
+                batch_size = chair_a.size(0)
+
+                chair_a = chair_a.to(self.device)
+                chair_b = chair_b.to(self.device)
+                chair_c = chair_c.to(self.device)
+                text_seq = text_seq.to(self.device)
+                text_len = text_len.to(self.device)
+                label = label.to(self.device)
+                
+                logit_a = self.model(chair_a, text_seq, text_len)
+                logit_b = self.model(chair_b, text_seq, text_len)
+                logit_c = self.model(chair_c, text_seq, text_len)
+
+                logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
+
+                loss = F.cross_entropy(logits, label)
+                epoch_loss.update(loss.item(), batch_size)
+
+                pred = F.softmax(logits, dim=1).max(1)
+                num_correct += torch.sum(pred == label).item()
+                num_total += batch_size
+
+                tqdm_batch.set_postfix({
+                    "Test Loss": epoch_loss.avg,
+                    "Test Acc": num_correct / num_total,
+                })
+                tqdm_batch.update()
+
+        tqdm_batch.close()
+
+        current_test_loss = epoch_loss.avg
+        self.test_losses.append(current_test_loss)
+        self.test_accs.append(num_correct / num_total)
+
+        return current_test_loss
+
+    def run(self):
+        try:
+            self.test()
+        except KeyboardInterrupt as e:
+            self.logger.info("Interrupt detected. Saving data...")
+            raise e
+
+    def finalise(self):
+        self.logger.info("Finishing and saving metrics...")
+        test_losses = np.array(self.test_losses)
+        test_accs = np.array(self.test_accs)
+
+        np.savez(
+            os.path.join(self.checkpoint_dir, 'test_out.npz'),
+            loss = test_losses, 
+            acc = test_accs,
+        )

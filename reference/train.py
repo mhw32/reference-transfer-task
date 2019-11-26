@@ -9,11 +9,8 @@ def run(config_path):
     config = process_config(config_path)
     agent = TrainAgent(config)
 
-    try:
-        agent.run()
-        agent.finalise()
-    except KeyboardInterrupt:
-        pass
+    agent.run()
+    agent.finalise()
 
 
 if __name__ == "__main__":
