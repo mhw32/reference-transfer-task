@@ -28,6 +28,7 @@
         "learning_rate": 0.01,
         "momentum": 0.9,
         "weight_decay": 1e-4,
-        "patience": 10
+        "patience": 10,
+        "epochs": 100000
     }
 }

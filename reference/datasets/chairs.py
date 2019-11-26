@@ -10,13 +10,13 @@ import torch
 import torch.utils.data as data
 from torchvision import transforms
 
-from src.text_utils import (
+from reference.text_utils import (
     SOS_TOKEN,
     EOS_TOKEN,
     PAD_TOKEN,
     UNK_TOKEN,
 )
-from src.utils import OrderedCounter
+from reference.utils import OrderedCounter
 
 
 class ChairsInContext(data.Dataset):
