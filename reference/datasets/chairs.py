@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -41,6 +42,8 @@ class ChairsInContext(data.Dataset):
         assert context_condition in ['all', 'far', 'close']
 
         self.data_dir = data_dir
+        self.image_dir = os.path.join(self.data_dir, 'images')
+        self.cache_dir = os.path.join(self.data_dir, 'cache')
         self.data_size = data_size
         self.vocab = vocab
         self.split = split
@@ -52,22 +55,36 @@ class ChairsInContext(data.Dataset):
             self.image_transform = transforms.ToTensor()
         else:
             self.image_transform = image_transform
+   
+        cache_clean_data = os.path.join(
+            self.cache_dir,
+            f'clean_data_{self.context_condition}.pickle',
+        )
+      
+        if not os.path.isfile(cache_clean_data):
+            csv_path = os.path.join(self.data_dir, 'chairs2k_group_data.csv')
+            df = pd.read_csv(csv_path)
+            df = df[df['correct'] == True]
+            df = df[df['communication_role'] == 'speaker']
+            
+            if self.context_condition != 'all':
+                df = df[df['context_condition'] == self.context_condition]
+            
+            df = df[['chair_a', 'chair_b', 'chair_c', 'target_chair', 'text']]
+            df = df.dropna()
 
-        csv_path = os.path.join(self.data_dir, 'chairs2k_group_data.csv')
-        df = pd.read_csv(csv_path)
-        df = df[df['correct'] == True]
-        df = df[df['communication_role'] == 'speaker']
-        
-        if self.context_condition != 'all':
-            df = df[df['context_condition'] == self.context_condition]
-        
-        df = df[['chair_a', 'chair_b', 'chair_c', 'target_chair', 'text']]
-        df = df.dropna()
+            data = np.asarray(df)
+            data_names = self._get_chair_image_names()
+            print('Cleaning data by removing nonexistant entries.')
+            data = self._clean_data(data, data_names)
 
-        data = np.asarray(df)
-        data_names = self._get_chair_image_names()
-        print('Cleaning data by removing nonexistant entries.')
-        data = self._clean_data(data, data_names)
+            print('Saving cleaned data to pickle.')
+            with open(cache_clean_data, 'wb') as fp:
+                pickle.dump(data, fp)
+        else:
+            print('Loading cleaned data from pickle.')
+            with open(cache_clean_data, 'rb') as fp:
+                data = pickle.load(fp)
 
         if self.data_size is not None:
             data = data[:self.data_size]
@@ -111,11 +128,10 @@ class ChairsInContext(data.Dataset):
         self.text_len = text_len
         self.max_len = max_len
         self.text_raw = text_raw
-        self.data_names = data_names
         self.text = text
 
     def _get_chair_image_names(self):
-        image_paths = glob(os.path.join(self.data_dir, 'images', '*.png'))
+        image_paths = glob(os.path.join(self.image_dir, '*.png'))
         names = [os.path.basename(path) for path in image_paths]
         return names
 
@@ -260,15 +276,15 @@ class ChairsInContext(data.Dataset):
         chair_a, chair_b, chair_c, _, _ = self.data[index]
         label = self.labels[index]
 
-        chair_a_pil = Image.open(os.path.join(self.data_dir, chair_a)).convert('RGB')
-        chair_b_pil = Image.open(os.path.join(self.data_dir, chair_b)).convert('RGB')
-        chair_c_pil = Image.open(os.path.join(self.data_dir, chair_c)).convert('RGB')
+        chair_a_pil = Image.open(os.path.join(self.image_dir, chair_a + '.png')).convert('RGB')
+        chair_b_pil = Image.open(os.path.join(self.image_dir, chair_b + '.png')).convert('RGB')
+        chair_c_pil = Image.open(os.path.join(self.image_dir, chair_c + '.png')).convert('RGB')
 
         chair_a_pt = self.image_transform(chair_a_pil)
         chair_b_pt = self.image_transform(chair_b_pil)
         chair_c_pt = self.image_transform(chair_c_pil)
 
         text_seq = torch.from_numpy(self.text_seq[index]).long()
-        text_len = torch.from_numpy(self.text_len[index]).long()
+        text_len = self.text_len[index]
 
         return index, chair_a_pt, chair_b_pt, chair_c_pt, text_seq, text_len, label
