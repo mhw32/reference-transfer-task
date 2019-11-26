@@ -247,12 +247,12 @@ class ChairsInContext(data.Dataset):
         return len(self.data)
     
     def __getitem__(self, index):
-        chair_a, chair_b, chair_c, chair_target, _ = self.data[index]
+        chair_a, chair_b, chair_c, _, _ = self.data[index]
         label = self.labels[index]
 
         chair_a_pil = Image.open(os.path.join(self.data_dir, chair_a)).convert('RGB')
-        chair_b_pil = Image.open(os.path.join(self.data_dir, chair_a)).convert('RGB')
-        chair_c_pil = Image.open(os.path.join(self.data_dir, chair_a)).convert('RGB')
+        chair_b_pil = Image.open(os.path.join(self.data_dir, chair_b)).convert('RGB')
+        chair_c_pil = Image.open(os.path.join(self.data_dir, chair_c)).convert('RGB')
 
         chair_a_pt = self.image_transform(chair_a_pil)
         chair_b_pt = self.image_transform(chair_b_pil)

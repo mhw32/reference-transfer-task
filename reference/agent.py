@@ -7,7 +7,12 @@ import logging
 import numpy as np
 from tqdm import tqdm
 from itertools import chain
+from torchvision import transforms
 from torch.utils.data import DataLoader
+
+from reference.setup import print_cuda_statistics
+from reference.datasets.chairs import ChairsInContext
+from reference.models import Supervised
 
 
 class BaseAgent(object):
@@ -111,7 +116,6 @@ class BaseAgent(object):
             self.current_epoch = epoch
             self.train_one_epoch()
             self.test()
-            self.sample()
             self.save_checkpoint()
 
     def train_one_epoch(self):
@@ -128,12 +132,6 @@ class BaseAgent(object):
         """
         raise NotImplementedError
 
-    def sample(self):
-        """
-        Generate and save samples to filesystem
-        """
-        raise NotImplementedError
-
     def backup(self):
         """
         Backs up the model upon interrupt
@@ -147,3 +145,60 @@ class BaseAgent(object):
         """
         self.logger.info("Saving final versions of model...")
         self.save_checkpoint(filename='final.pth.tar')
+
+
+class ReferenceAgent(BaseAgent):
+    
+    def _load_datasets(self):
+        image_transforms = transforms.ToTensor()
+        train_dataset = ChairsInContext(
+            self.config.data_dir,
+            data_size = self.config.data.data_size,
+            vocab = None,
+            split = 'train', 
+            context_condition = self.config.data.context_condition,
+            split_mode = self.config.data.split_mode, 
+            image_size = self.config.data.image_size, 
+            train_frac = 0.64,
+            val_frac = 0.16,
+            image_transform = image_transforms,
+        )
+
+    def _create_model(self):
+        self.model = Supervised(
+            # ---
+            train_image_from_scratch = self.config.train_image_from_scratch,
+            train_text_from_scratch = self.config.train_text_from_scratch,
+            # ---
+            n_pretrain_image = self.config.model.image.n_pretrain_image,
+            n_pretrain_text = self.config.model.text.n_pretrain_text,
+            # ---
+            n_bottleneck = self.config.model.n_bottleneck,
+            n_image_channels = self.config.model.image.n_image_channels,
+            n_conv_filters = self.config.model.image.n_conv_filters,
+            vocab_size = None,
+            n_embedding = self.config.model.text.n_embedding,
+            n_gru_hidden = self.config.model.text.n_gru_hidden,
+            gru_bidirectional = self.config.model.text.gru_bidireqctional,
+            n_gru_layers = self.config.model.text.n_gru_layers,
+        )
+
+    def _create_optimizer(self):
+        self.optim = torch.optim.SGD(
+            self.model.parameters(),
+            lr=self.config.optim.learning_rate,
+            momentum=self.config.optim.momentum,
+            weight_decay=self.config.optim.weight_decay,
+        )
+
+    def train_one_epoch(self):
+        raise NotImplementedError
+
+    def test(self):
+        raise NotImplementedError
+
+    def save_checkpoint(self, filename="checkpoint.pth.tar", is_best=False):
+        raise NotImplementedError
+    
+    def load_checkpoint(self, filename):
+        raise NotImplementedError
