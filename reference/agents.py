@@ -155,7 +155,7 @@ class BaseAgent(object):
         self.save_checkpoint(filename='final.pth.tar')
 
 
-class ReferenceAgent(BaseAgent):
+class TrainAgent(BaseAgent):
     
     def _load_datasets(self):
         train_transforms = transforms.ToTensor()
