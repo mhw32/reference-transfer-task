@@ -2,6 +2,7 @@ import os
 import time
 import nltk
 import numpy as np
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -267,6 +268,15 @@ if __name__ == "__main__":
     infersent = InferSent(params_model)
     infersent.load_state_dict(torch.load(INFERSENT_PATH))
     infersent.set_w2v_path(W2V_PATH)
+
+    agent = FeatureAgent()
+    train_dataset = agent.train_dataset
+    train_len = len(train_dataset)
+    sentences = []
+    print('Accumulating sentences to build vocabulary')
+    for index in tqdm(range(train_len)):
+        text = train_dataset.__gettext__(index)
+        sentences.append(text)
     infersent.build_vocab(sentences, tokenize=True)
 
     def extract(raw_text_list):
@@ -274,7 +284,6 @@ if __name__ == "__main__":
         features = torch.from_numpy(features).float()
         return features
 
-    agent = FeatureAgent()
     train_text_embs = agent.extract_features(extract, modality='text', split='train')
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
