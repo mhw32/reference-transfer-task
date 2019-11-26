@@ -412,7 +412,7 @@ class EvaluateAgent(object):
         self.test_accs = []
 
     def _load_datasets(self):
-        tests_transforms = transforms.ToTensor()
+        test_transforms = transforms.ToTensor()
         test_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
@@ -444,7 +444,7 @@ class EvaluateAgent(object):
         num_batches = self.test_len // self.config.optim.batch_size
         tqdm_batch = tqdm(total=num_batches, desc="[Test]")
 
-        self.model.eval()
+        self.agent.model.eval()
 
         epoch_loss = AverageMeter()
         num_correct = 0.
@@ -454,16 +454,16 @@ class EvaluateAgent(object):
             for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.test_loader:
                 batch_size = chair_a.size(0)
 
-                chair_a = chair_a.to(self.device)
-                chair_b = chair_b.to(self.device)
-                chair_c = chair_c.to(self.device)
-                text_seq = text_seq.to(self.device)
-                text_len = text_len.to(self.device)
-                label = label.to(self.device)
+                chair_a = chair_a.to(self.agent.device)
+                chair_b = chair_b.to(self.agent.device)
+                chair_c = chair_c.to(self.agent.device)
+                text_seq = text_seq.to(self.agent.device)
+                text_len = text_len.to(self.agent.device)
+                label = label.to(self.agent.device)
                 
-                logit_a = self.model(chair_a, text_seq, text_len)
-                logit_b = self.model(chair_b, text_seq, text_len)
-                logit_c = self.model(chair_c, text_seq, text_len)
+                logit_a = self.agent.model(chair_a, text_seq, text_len)
+                logit_b = self.agent.model(chair_b, text_seq, text_len)
+                logit_c = self.agent.model(chair_c, text_seq, text_len)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
