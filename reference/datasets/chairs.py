@@ -29,7 +29,6 @@ class ChairsInContext(data.Dataset):
             split = 'train', 
             context_condition = 'all',
             split_mode = 'easy', 
-            image_size = 32, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = None,
@@ -46,7 +45,6 @@ class ChairsInContext(data.Dataset):
         self.split = split
         self.context_condition = context_condition
         self.split_mode = split_mode
-        self.image_size = image_size
         self.train_frac = train_frac
         self.val_frac = val_frac
         if image_transform is None:

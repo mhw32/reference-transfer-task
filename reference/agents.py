@@ -76,7 +76,7 @@ class BaseAgent(object):
 
     def _create_dataloader(self, dataset):
         dataset_size = len(dataset)
-        loader = DataLoader(dataset, batch_size=self.config.optim_params.batch_size, shuffle=True, 
+        loader = DataLoader(dataset, batch_size=self.config.optim.batch_size, shuffle=True, 
                             num_workers=self.config.data_loader_workers)
         
         return loader, dataset_size
@@ -205,7 +205,6 @@ class TrainAgent(BaseAgent):
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            image_size = self.config.data.image_size, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = train_transforms,
@@ -218,7 +217,6 @@ class TrainAgent(BaseAgent):
             split = 'val',  # NOTE: do not bleed test in
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            image_size = self.config.data.image_size, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = val_transforms,
@@ -496,7 +494,6 @@ class EvaluateAgent(object):
             split = 'test',
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            image_size = self.config.data.image_size, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = test_transforms,
@@ -509,7 +506,7 @@ class EvaluateAgent(object):
         dataset_size = len(dataset)
         loader = DataLoader(
             dataset, 
-            batch_size = self.config.optim_params.batch_size, 
+            batch_size = self.config.optim.batch_size, 
             shuffle = True, 
             num_workers = self.config.data_loader_workers,
         )
@@ -592,10 +589,120 @@ class EvaluateAgent(object):
         )
 
 
+class FeatureAgent(object):
+    """Agent class to extract features."""
+    
+    DEFAULT_CONFIG_FILE = os.path.join(
+        os.path.dirname(__file__), 
+        'configs',
+        'vanilla.json',
+    )
+
+    def __init__(self, image_transforms = None):
+        self.config = self.DEFAULT_CONFIG_FILE
+        self._load_datasets()
+        self.train_loader, self.train_len = self._create_dataloader(self.train_dataset)
+        self.val_loader, self.val_len = self._create_dataloader(self.val_dataset)
+        self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
+        self.image_transforms = image_transforms
+        
+     def _create_dataloader(self, dataset):
+        dataset_size = len(dataset)
+        loader = DataLoader(dataset, batch_size=self.config.optim.batch_size, shuffle=False)
+        return loader, dataset_size
+
+    def _load_datasets(self):
+        train_dataset = ChairsInContext(
+            self.config.data_dir,
+            data_size = self.config.data.data_size,
+            vocab = None,
+            split = 'train', 
+            context_condition = self.config.data.context_condition,
+            split_mode = self.config.data.split_mode, 
+            train_frac = 0.64,
+            val_frac = 0.16,
+            image_transform = self.image_transforms,
+        )
+        val_dataset = ChairsInContext(
+            self.config.data_dir,
+            data_size = self.config.data.data_size,
+            vocab = train_dataset.vocab,
+            split = 'val',
+            context_condition = self.config.data.context_condition,
+            split_mode = self.config.data.split_mode, 
+            train_frac = 0.64,
+            val_frac = 0.16,
+            image_transform = self.image_transforms,
+        )
+        test_dataset = ChairsInContext(
+            self.config.data_dir,
+            data_size = self.config.data.data_size,
+            vocab = train_dataset.vocab,
+            split = 'test',
+            context_condition = self.config.data.context_condition,
+            split_mode = self.config.data.split_mode, 
+            train_frac = 0.64,
+            val_frac = 0.16,
+            image_transform = self.image_transforms,
+        )
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+        self.test_dataset = test_dataset
+
+    def extract_features(self, extract_fun, modality='image', split='train'):
+        assert split in ['train', 'val', 'test']
+        assert modality in ['image', 'text']
+
+        if split == 'train':
+            dataset = self.train_dataset
+            data_loader = self.train_loader
+        elif split == 'val':
+            dataset = self.val_dataset
+            data_loader = self.val_loader
+        elif split == 'test':
+            dataset = self.test_dataset
+            data_loader = self.test_loader
+
+        pbar = tqdm(total=len(data_loader))
+
+        chair_embs_a, chair_embs_b, chair_embs_c, text_embs = [], [], [], []
+
+        for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in data_loader:
+            
+            if modality == 'image':
+                chair_emb_a = extract_fun(chair_a)
+                chair_emb_b = extract_fun(chair_b)
+                chair_emb_c = extract_fun(chair_c)
+
+                chair_embs_a.append(chair_emb_a)
+                chair_embs_b.append(chair_emb_b)
+                chair_embs_c.append(chair_emb_c)
+            else:
+                raw_text = [dataset.__gettext__(ix.item()) for ix in index]
+                text_emb = extract_fun(raw_text)
+
+                text_embs.append(text_emb)
+        
+            pbar.update()
+
+        pbar.close()
+
+        if modality == 'image':
+            chair_embs_a = torch.cat(chair_embs_a, dim=0)
+            chair_embs_b = torch.cat(chair_embs_b, dim=0)
+            chair_embs_c = torch.cat(chair_embs_c, dim=0)
+
+            return chair_embs_a, chair_embs_b, chair_embs_c
+        else:
+            text_embs = torch.cat(text_embs, dim=0)
+
+            return text_embs
+
+
 def extract_chair_embeddings(index, image_embeddings, device):
     chair_emb_a, chair_emb_b, chair_emb_c = [], [], []
     for ix in index:
-        chair_a_ix, chair_b_ix, chair_c_ix =image_embeddings[ix.item()] 
+        chair_a_ix, chair_b_ix, chair_c_ix = image_embeddings[ix.item()] 
         chair_emb_a.append(chair_a_ix)
         chair_emb_b.append(chair_b_ix)
         chair_emb_c.append(chair_c_ix)
