@@ -121,7 +121,7 @@ class BaseAgent(object):
         Main training loop
         :return:
         """
-        for epoch in range(self.current_epoch, self.config.num_epochs):
+        for epoch in range(self.current_epoch, self.config.optim.epochs):
             self.current_epoch = epoch
             self.train_one_epoch()
             self.test()
@@ -265,7 +265,7 @@ class TrainAgent(BaseAgent):
         Train until patience runs out. Then lower the learning rate
         then keep training. Do that twice.
         """
-        for epoch in range(self.current_epoch, self.config.num_epochs):
+        for epoch in range(self.current_epoch, self.config.optim.epochs):
             self.current_epoch = epoch
             self.train_one_epoch()
             self.validate()
@@ -606,7 +606,7 @@ class FeatureAgent(object):
         self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
         self.image_transforms = image_transforms
         
-     def _create_dataloader(self, dataset):
+    def _create_dataloader(self, dataset):
         dataset_size = len(dataset)
         loader = DataLoader(dataset, batch_size=self.config.optim.batch_size, shuffle=False)
         return loader, dataset_size

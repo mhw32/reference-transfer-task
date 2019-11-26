@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from glob import glob
+from tqdm import tqdm
 from nltk import sent_tokenize, word_tokenize
 
 import torch
@@ -65,6 +66,7 @@ class ChairsInContext(data.Dataset):
 
         data = np.asarray(df)
         data_names = self._get_chair_image_names()
+        print('Cleaning data by removing nonexistant entries.')
         data = self._clean_data(data, data_names)
 
         if self.data_size is not None:
@@ -83,6 +85,7 @@ class ChairsInContext(data.Dataset):
         text = [d[-1] for d in data]
         
         if vocab is None:
+            print('Building vocabulary')
             self.vocab = self.build_vocab(text)
         else:
             self.vocab = vocab
@@ -112,13 +115,13 @@ class ChairsInContext(data.Dataset):
         self.text = text
 
     def _get_chair_image_names(self):
-        image_paths = glob(os.path.join(self.data_dir, '*.png'))
+        image_paths = glob(os.path.join(self.data_dir, 'images', '*.png'))
         names = [os.path.basename(path) for path in image_paths]
         return names
 
     def _clean_data(self, data, names):
         cleaned = []
-        for i in range(len(data)):
+        for i in tqdm(range(len(data))):
             chair_a, chair_b, chair_c, chair_target, _ = data[i]
             
             if chair_a + '.png' not in names:
@@ -182,7 +185,7 @@ class ChairsInContext(data.Dataset):
 
     def _process_labels(self, data):
         labels = []
-        for i in range(data):
+        for i in range(len(data)):
             if data[i, 3] == data[i, 0]:
                 labels.append(0)
             elif data[i, 3] == data[i, 1]:
@@ -205,9 +208,12 @@ class ChairsInContext(data.Dataset):
             i2w[len(w2i)] = st
             w2i[st] = len(w2i)
 
+        pbar = tqdm(total=len(texts))
         for text in texts:
             tokens = word_tokenize(text)
             w2c.update(tokens)
+            pbar.update()
+        pbar.close()
 
         for w, c in w2c.items():
             i2w[len(w2i)] = w
