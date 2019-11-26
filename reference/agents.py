@@ -2,6 +2,7 @@ import os
 import sys
 import copy
 import torch
+import pickle
 import dotmap
 import logging
 import numpy as np
@@ -158,6 +159,43 @@ class BaseAgent(object):
 class TrainAgent(BaseAgent):
     """Agent class to train reference game witness functions."""
     
+    def __init__(self, config):
+        super().__init__(config)
+
+        if self.config.train_image_from_scratch:
+            assert self.config.pretrain_image_embedding_dir is not None
+            train_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir, 
+                'train.pickle',
+            )
+            val_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'val.pickle',
+            )
+            
+            with open(train_embedding_file) as fp:
+                self.train_image_embeddings = pickle.load(fp)
+
+            with open(val_embedding_file) as fp:
+                self.val_image_embeddings = pickle.load(fp)
+
+        if self.config.train_text_from_scratch:
+            assert self.config.pretrain_text_embedding_dir is not None
+            train_embedding_file = os.path.join(
+                self.config.pretrain_text_embedding_dir,
+                'train.pickle',
+            )
+            val_embedding_file = os.path.join(
+                self.config.pretrain_text_embedding_dir,
+                'val.pickle',
+            )
+
+            with open(train_embedding_file) as fp:
+                self.train_text_embeddings = pickle.load(fp)
+
+            with open(val_embedding_file) as fp:
+                self.val_text_embeddings = pickle.load(fp)
+
     def _load_datasets(self):
         train_transforms = transforms.ToTensor()
         train_dataset = ChairsInContext(
@@ -212,9 +250,9 @@ class TrainAgent(BaseAgent):
     def _create_optimizer(self):
         self.optim = torch.optim.SGD(
             self.model.parameters(),
-            lr=self.config.optim.learning_rate,
-            momentum=self.config.optim.momentum,
-            weight_decay=self.config.optim.weight_decay,
+            lr = self.config.optim.learning_rate,
+            momentum = self.config.optim.momentum,
+            weight_decay = self.config.optim.weight_decay,
         )
         self.scheduler = ReduceLROnPlateau(
             self.optim, 
@@ -244,7 +282,7 @@ class TrainAgent(BaseAgent):
         self.model.train()
         epoch_loss = AverageMeter()
 
-        for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.train_loader:
+        for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.train_loader:
             batch_size = chair_a.size(0)
 
             chair_a = chair_a.to(self.device)
@@ -254,9 +292,18 @@ class TrainAgent(BaseAgent):
             text_len = text_len.to(self.device)
             label = label.to(self.device)
 
-            logit_a = self.model(chair_a, text_seq, text_len)
-            logit_b = self.model(chair_b, text_seq, text_len)
-            logit_c = self.model(chair_c, text_seq, text_len)
+            chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+            if self.config.train_image_from_scratch:
+                chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                    index, self.train_image_embeddings, self.device)
+
+            text_emb = None
+            if self.config.train_text_from_scratch:
+                text_emb = extract_text_embeddings(index, self.train_text_embeddings, self.device)
+
+            logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
+            logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
+            logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
 
             logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -288,7 +335,7 @@ class TrainAgent(BaseAgent):
         num_total = 0.
 
         with torch.no_grad():
-            for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.val_loader:
+            for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.val_loader:
                 batch_size = chair_a.size(0)
 
                 chair_a = chair_a.to(self.device)
@@ -297,10 +344,19 @@ class TrainAgent(BaseAgent):
                 text_seq = text_seq.to(self.device)
                 text_len = text_len.to(self.device)
                 label = label.to(self.device)
-                
-                logit_a = self.model(chair_a, text_seq, text_len)
-                logit_b = self.model(chair_b, text_seq, text_len)
-                logit_c = self.model(chair_c, text_seq, text_len)
+
+                chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+                if self.config.train_image_from_scratch:
+                    chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                        index, self.val_image_embeddings, self.device)
+
+                text_emb = None
+                if self.config.train_text_from_scratch:
+                    text_emb = extract_text_embeddings(index, self.val_text_embeddings, self.device)
+
+                logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
+                logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
+                logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -411,6 +467,26 @@ class EvaluateAgent(object):
         self.test_losses = []
         self.test_accs = []
 
+        if self.config.train_image_from_scratch:
+            assert self.config.pretrain_image_embedding_dir is not None
+            test_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir, 
+                'test.pickle',
+            )
+ 
+            with open(test_embedding_file) as fp:
+                self.test_image_embeddings = pickle.load(fp)
+
+        if self.config.train_text_from_scratch:
+            assert self.config.pretrain_text_embedding_dir is not None
+            test_embedding_file = os.path.join(
+                self.config.pretrain_text_embedding_dir,
+                'test.pickle',
+            )
+
+            with open(test_embedding_file) as fp:
+                self.test_text_embeddings = pickle.load(fp)
+
     def _load_datasets(self):
         test_transforms = transforms.ToTensor()
         test_dataset = ChairsInContext(
@@ -451,7 +527,7 @@ class EvaluateAgent(object):
         num_total = 0.
 
         with torch.no_grad():
-            for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.test_loader:
+            for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.test_loader:
                 batch_size = chair_a.size(0)
 
                 chair_a = chair_a.to(self.agent.device)
@@ -460,10 +536,19 @@ class EvaluateAgent(object):
                 text_seq = text_seq.to(self.agent.device)
                 text_len = text_len.to(self.agent.device)
                 label = label.to(self.agent.device)
-                
-                logit_a = self.agent.model(chair_a, text_seq, text_len)
-                logit_b = self.agent.model(chair_b, text_seq, text_len)
-                logit_c = self.agent.model(chair_c, text_seq, text_len)
+
+                chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+                if self.config.train_image_from_scratch:
+                    chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                        index, self.test_image_embeddings, self.agent.device)
+
+                text_emb = None
+                if self.config.train_text_from_scratch:
+                    text_emb = extract_text_embeddings(index, self.test_text_embeddings, self.agent.device)
+
+                logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
+                logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
+                logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -505,3 +590,25 @@ class EvaluateAgent(object):
             loss = test_losses, 
             acc = test_accs,
         )
+
+
+def extract_chair_embeddings(index, image_embeddings, device):
+    chair_emb_a, chair_emb_b, chair_emb_c = [], [], []
+    for ix in index:
+        chair_a_ix, chair_b_ix, chair_c_ix =image_embeddings[ix.item()] 
+        chair_emb_a.append(chair_a_ix)
+        chair_emb_b.append(chair_b_ix)
+        chair_emb_c.append(chair_c_ix)
+    chair_emb_a = torch.from_numpy(np.stack(chair_emb_a)).to(device)
+    chair_emb_b = torch.from_numpy(np.stack(chair_emb_b)).to(device)
+    chair_emb_c = torch.from_numpy(np.stack(chair_emb_c)).to(device)
+    return chair_emb_a, chair_emb_b, chair_emb_c
+
+
+def extract_text_embeddings(index, text_embeddings, device):
+    text_emb = []
+    for ix in index:
+        text_emb_ix = text_embeddings[ix.item()]
+        text_emb.append(text_emb_ix)
+    text_emb = torch.from_numpy(np.stack(text_emb)).to(device)
+    return text_emb

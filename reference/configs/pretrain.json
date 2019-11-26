@@ -12,10 +12,10 @@
         "context_condition": "all",
         "split_mode": "easy"
     },
-    "train_image_from_scratch": true,
-    "train_text_from_scratch": true,
-    "pretrain_image_embedding_dir": null,
-    "pretrain_text_embedding_dir": null,
+    "train_image_from_scratch": false,
+    "train_text_from_scratch": false,
+    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/imagenet",
+    "pretrain_text_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/roberta",
     "model": {
         "n_bottleneck": 64,
         "image": {

@@ -102,14 +102,16 @@ class ChairsInContext(data.Dataset):
         self.pad_index = self.w2i[self.pad_token]
         self.unk_index = self.w2i[self.unk_token]
 
-        text_seq, text_len, max_len = self._process_text(text)
+        text_seq, text_len, max_len, text_raw = self._process_text(text)
 
         self.data = data
         self.labels = labels
         self.text_seq = text_seq
         self.text_len = text_len
         self.max_len = max_len
+        self.text_raw = text_raw
         self.data_names = data_names
+        self.text = text
 
     def _get_chair_image_names(self):
         image_paths = glob(os.path.join(self.data_dir, '*.png'))
@@ -219,17 +221,18 @@ class ChairsInContext(data.Dataset):
         return vocab
 
     def _process_text(self, text):
-        text_seq, text_len = [], []
+        text_seq, text_len, raw_tokens = [], [], []
 
         max_len = 0
         for i in range(len(text)):
-            tokens = word_tokenize(text[i])
-            tokens = [SOS_TOKEN] + tokens + [EOS_TOKEN]
+            _tokens = word_tokenize(text[i])
+            tokens = [SOS_TOKEN] + _tokens + [EOS_TOKEN]
             length = len(tokens)
             max_len = max(max_len, length)
 
             text_seq.append(tokens)
             text_len.append(length)
+            raw_tokens.append(_tokens)
 
         for i in range(len(text)):
             tokens = text_seq[i]
@@ -241,11 +244,14 @@ class ChairsInContext(data.Dataset):
         text_seq = np.array(text_seq)
         text_len = np.array(text_len)
 
-        return text_seq, text_len, max_len
+        return text_seq, text_len, max_len, raw_tokens
 
     def __len__(self):
         return len(self.data)
     
+    def __gettext__(self, index):
+        return self.text_raw[index]
+
     def __getitem__(self, index):
         chair_a, chair_b, chair_c, _, _ = self.data[index]
         label = self.labels[index]
@@ -261,8 +267,4 @@ class ChairsInContext(data.Dataset):
         text_seq = torch.from_numpy(self.text_seq[index]).long()
         text_len = torch.from_numpy(self.text_len[index]).long()
 
-        return chair_a_pt, chair_b_pt, chair_c_pt, text_seq, text_len, label
-
-
-if __name__ == "__main__":
-    dataset = ChairsInContext('../../data/chairs_in_context')
+        return index, chair_a_pt, chair_b_pt, chair_c_pt, text_seq, text_len, label
