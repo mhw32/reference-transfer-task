@@ -27,7 +27,7 @@ class BaseAgent(object):
         
         self._load_datasets()
         self.train_loader, self.train_len = self._create_dataloader(self.train_dataset)
-        self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
+        self.val_loader, self.val_len = self._create_dataloader(self.val_dataset)
 
         self._choose_device()
         self._create_model()
@@ -41,6 +41,10 @@ class BaseAgent(object):
         self.current_loss = 0
         self.current_val_loss = 0
         self.best_val_loss = np.inf
+
+        self.train_losses = []
+        self.val_losses = []
+        self.val_accs = []
 
     def _set_seed(self):
         torch.manual_seed(self.config.seed)
@@ -167,8 +171,8 @@ class ReferenceAgent(BaseAgent):
             val_frac = 0.16,
             image_transform = train_transforms,
         )
-        test_transforms = transforms.ToTensor()
-        test_dataset = ChairsInContext(
+        val_transforms = transforms.ToTensor()
+        val_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
             vocab = train_dataset.vocab,
@@ -178,10 +182,10 @@ class ReferenceAgent(BaseAgent):
             image_size = self.config.data.image_size, 
             train_frac = 0.64,
             val_frac = 0.16,
-            image_transform = test_transforms,
+            image_transform = val_transforms,
         )
         self.train_dataset = train_dataset
-        self.test_dataset = test_dataset
+        self.val_dataset = val_dataset
         self.vocab = train_dataset.vocab
         self.vocab_size = len(self.vocab['w2i'])
 
@@ -227,7 +231,7 @@ class ReferenceAgent(BaseAgent):
         for epoch in range(self.current_epoch, self.config.num_epochs):
             self.current_epoch = epoch
             self.train_one_epoch()
-            self.test()
+            self.validate()
             self.scheduler.step(self.current_val_loss)
             self.save_checkpoint()
 
@@ -236,10 +240,10 @@ class ReferenceAgent(BaseAgent):
         tqdm_batch = tqdm(total=num_batches,
                             desc="[Epoch {}]".format(self.current_epoch))
 
-        self.model()
+        self.model.train()
         epoch_loss = AverageMeter()
 
-        for batch_i, (chair_a, chair_b, chair_c, _, text_seq, text_len, label) in enumerate(self.train_loader):
+        for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.train_loader:
             batch_size = chair_a.size(0)
 
             chair_a = chair_a.to(self.device)
@@ -262,9 +266,9 @@ class ReferenceAgent(BaseAgent):
             self.optim.step()
             
             epoch_loss.update(loss.item(), batch_size)
-            tqdm_batch.set_postfix({"Loss": epoch_loss.avg})
+            tqdm_batch.set_postfix({"Train Loss": epoch_loss.avg})
 
-            self.train_loss.append(epoch_loss.val)
+            self.train_losses.append(epoch_loss.val)
 
             self.current_iteration += 1
             tqdm_batch.update()
@@ -272,8 +276,59 @@ class ReferenceAgent(BaseAgent):
         self.current_loss = epoch_loss.avg
         tqdm_batch.close()
 
-    def test(self):
-        raise NotImplementedError
+    def validate(self):
+        num_batches = self.val_len // self.config.optim.batch_size
+        tqdm_batch = tqdm(total=num_batches, desc="[Val]")
+
+        self.model.eval()
+
+        epoch_loss = AverageMeter()
+        num_correct = 0.
+        num_total = 0.
+
+        with torch.no_grad():
+            for chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.val_loader:
+                batch_size = chair_a.size(0)
+
+                chair_a = chair_a.to(self.device)
+                chair_b = chair_b.to(self.device)
+                chair_c = chair_c.to(self.device)
+                text_seq = text_seq.to(self.device)
+                text_len = text_len.to(self.device)
+                label = label.to(self.device)
+                
+                logit_a = self.model(chair_a, text_seq, text_len)
+                logit_b = self.model(chair_b, text_seq, text_len)
+                logit_c = self.model(chair_c, text_seq, text_len)
+
+                logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
+
+                loss = F.cross_entropy(logits, label)
+                epoch_loss.update(loss.item(), batch_size)
+
+                pred = F.softmax(logits, dim=1).max(1)
+                num_correct += torch.sum(pred == label).item()
+                num_total += batch_size
+
+                tqdm_batch.set_postfix({
+                    "Val Loss": epoch_loss.avg,
+                    "Val Acc": num_correct / num_total,
+                })
+                tqdm_batch.update()
+
+        tqdm_batch.close()
+
+        self.current_val_iteration += 1
+        self.current_val_loss = epoch_loss.avg
+        
+        self.val_losses.append(self.current_val_loss)
+        self.val_accs.append(num_correct / num_total)
+
+        # save if this was the best validation accuracy
+        if self.current_val_loss <= self.best_val_loss:
+            self.best_val_loss = self.current_val_loss
+
+        return self.current_val_loss
 
     def save_checkpoint(self, filename="checkpoint.pth.tar"):
         out_dict = {
@@ -281,12 +336,12 @@ class ReferenceAgent(BaseAgent):
             'optim_state_dict': self.optim.state_dict(),
             'epoch': self.current_epoch,
             'iteration': self.current_iteration,
-            'loss': self.current_loss,
+            'train_loss': self.current_loss,
             'val_iteration': self.current_val_iteration,
-            'val_metric': self.current_val_metric,
+            'val_loss': self.current_val_loss,
             'config': self.config,
         }
-        is_best = ((self.current_val_metric == self.best_val_metric) or
+        is_best = ((self.current_val_loss == self.best_val_loss) or
                    not self.config.validate)
         save_checkpoint(out_dict, is_best, filename=filename,
                         folder=self.config.checkpoint_dir)
