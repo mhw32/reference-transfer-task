@@ -63,9 +63,9 @@ class Supervised(nn.Module):
             self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
         else:
             self.image_fc = nn.Sequential(
-                nn.Linear(self.n_pretrain_image, self.n_pretrain_image),
-                nn.LeakyReLU(),
                 nn.Linear(self.n_pretrain_image, self.n_bottleneck),
+                nn.LeakyReLU(),
+                nn.Linear(self.n_bottleneck, self.n_bottleneck),
             )
 
         if self.train_text_from_scratch:
@@ -83,17 +83,19 @@ class Supervised(nn.Module):
             self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck)
         else:
             self.text_fc = nn.Sequential(
-                nn.Linear(self.n_pertrain_text, self.n_pretrain_text),
+                nn.Linear(self.n_pertrain_text, self.n_bottleneck),
                 nn.LeakyReLU(),
-                nn.Linear(self.n_pretrain_text, self.n_bottleneck),
+                nn.Linear(self.n_bottleneck, self.n_bottleneck),
             )
 
         self.joint_fc = nn.Sequential(
             nn.Linear(self.n_bottleneck * 2, self.n_bottleneck),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Linear(self.n_bottleneck, self.n_bottleneck // 2),
-            nn.LeakyReLU(),
-            nn.Linear(self.n_bottleneck // 2, 1),
+            nn.ReLU(),
+            nn.Linear(self.n_bottleneck // 2, self.n_bottleneck // 4),
+            nn.ReLU(),
+            nn.Linear(self.n_bottleneck // 4, 1),
         )
 
     def forward(
