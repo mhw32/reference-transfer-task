@@ -21,7 +21,7 @@ from reference.utils import AverageMeter
 from reference.setup import print_cuda_statistics
 from reference.datasets.chairs import ChairsInContext
 from reference.datasets.chair_dataset import Chairs_ReferenceGame
-from reference.models import Supervised, TextImageCompatibility
+from reference.models import Witness
 
 
 class BaseAgent(object):
@@ -226,37 +226,13 @@ class TrainAgent(BaseAgent):
             val_frac = 0.10,
             image_transform = None,
         )
-        """
-        train_dataset = Chairs_ReferenceGame(
-            hard = self.config.data.split_mode == 'hard',
-            image_size = self.config.data.image_size,
-            split = 'Train', 
-            context_condition = self.config.data.context_condition,
-        )
-        val_dataset = Chairs_ReferenceGame(
-            vocab = train_dataset.vocab,
-            hard = self.config.data.split_mode == 'hard',
-            image_size = self.config.data.image_size,
-            split = 'Validation',
-            context_condition = self.config.data.context_condition,
-        )
-        """
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.vocab = train_dataset.vocab
         self.vocab_size = len(self.vocab['w2i'])
 
     def _create_model(self):
-        self.model = TextImageCompatibility(
-            vocab_size = self.vocab_size,
-            img_size = self.config.data.image_size,
-            channels = self.config.model.image.n_image_channels,
-            embedding_dim = 64,
-            hidden_dim = 256,
-            n_filters = 64,
-        ).to(self.device)
-        """
-        self.model = Supervised(
+        self.model = Witness(
             # ---
             train_image_from_scratch = self.config.train_image_from_scratch,
             train_text_from_scratch = self.config.train_text_from_scratch,
@@ -273,7 +249,6 @@ class TrainAgent(BaseAgent):
             gru_bidirectional = self.config.model.text.gru_bidireqctional,
             n_gru_layers = self.config.model.text.n_gru_layers,
         ).to(self.device)
-        """
 
     def _create_optimizer(self):
         if self.config.optim.optimizer == 'SGD':
@@ -332,7 +307,6 @@ class TrainAgent(BaseAgent):
             text_len = text_len.to(self.device)
             label = label.to(self.device)
 
-            """
             chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
             if not self.config.train_image_from_scratch:
                 chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
@@ -341,11 +315,10 @@ class TrainAgent(BaseAgent):
             text_emb = None
             if not self.config.train_text_from_scratch:
                 text_emb = extract_text_embeddings(index, self.train_text_embeddings, self.device)
-            """
 
-            logit_a = self.model(chair_a, text_seq, text_len)  # , image_emb = chair_emb_a, text_emb = text_emb)
-            logit_b = self.model(chair_b, text_seq, text_len)  #, image_emb = chair_emb_b, text_emb = text_emb)
-            logit_c = self.model(chair_c, text_seq, text_len)  # , image_emb = chair_emb_c, text_emb = text_emb)
+            logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
+            logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
+            logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
 
             logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -365,8 +338,6 @@ class TrainAgent(BaseAgent):
 
         self.current_loss = epoch_loss.avg
         tqdm_batch.close()
-
-        print(f"Training Loss: {self.current_loss}")
 
     def validate(self):
         num_batches = self.val_len // self.config.optim.batch_size
@@ -429,8 +400,6 @@ class TrainAgent(BaseAgent):
         # save if this was the best validation accuracy
         if self.current_val_loss <= self.best_val_loss:
             self.best_val_loss = self.current_val_loss
-
-        print(f"Validation Loss: {self.current_val_loss}")
 
         return self.current_val_loss
 
