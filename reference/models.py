@@ -62,7 +62,11 @@ class Supervised(nn.Module):
             )
             self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
         else:
-            self.image_fc = nn.Linear(self.n_pretrain_image, self.n_bottleneck)
+            self.image_fc = nn.Sequential(
+                nn.Linear(self.n_pretrain_image, self.n_pretrain_image),
+                nn.LeakyReLU(),
+                nn.Linear(self.n_pretrain_image, self.n_bottleneck),
+            )
 
         if self.train_text_from_scratch:
             self.text_embed = nn.Embedding(self.vocab_size, self.n_embedding)
@@ -78,7 +82,11 @@ class Supervised(nn.Module):
                 n_gru_effect_hidden *= 2
             self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck)
         else:
-            self.text_fc = nn.Linear(self.n_pretrain_text, self.n_bottleneck)
+            self.text_fc = nn.Sequential(
+                nn.Linear(self.n_pertrain_text, self.n_pretrain_text),
+                nn.LeakyReLU(),
+                nn.Linear(self.n_pretrain_text, self.n_bottleneck),
+            )
 
         self.joint_fc = nn.Sequential(
             nn.Linear(self.n_bottleneck * 2, self.n_bottleneck),
