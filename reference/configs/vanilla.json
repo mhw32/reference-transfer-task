@@ -8,7 +8,7 @@
     "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
     "data": {
         "data_size": null,
-        "image_size": 32,
+        "image_size": 64,
         "context_condition": "far",
         "split_mode": "easy"
     },

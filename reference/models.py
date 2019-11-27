@@ -54,8 +54,11 @@ class Witness(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True),
                 # state size. (self.n_conv_filters*2) x 16 x 16
                 nn.Conv2d(self.n_conv_filters * 2, self.n_conv_filters * 4, 4, 2, 1, bias=False),
+                nn.LeakyReLU(0.2, inplace=True),
+                # state size. (self.n_conv_filers*4) x 4 x 4
+                nn.Conv2d(self.n_conv_filters * 4, self.n_conv_filters * 8, 4, 2, 1, bias=False),
             )
-            self.image_fc = nn.Linear(self.n_conv_filters * 4 * 4 * 4, self.n_bottleneck)
+            self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
         else:
             self.image_fc = nn.Linear(self.n_pretrain_image, self.n_bottleneck)
 
