@@ -281,7 +281,8 @@ class TrainAgent(BaseAgent):
         for epoch in range(self.current_epoch, self.config.optim.epochs):
             self.current_epoch = epoch
             self.train_one_epoch()
-            self.validate()
+            if epoch > 0 and epoch % self.config.optim.val_freq == 0:
+                self.validate()
             if self.config.optim.auto_schedule:
                 self.scheduler.step(self.current_val_loss)
             self.save_checkpoint()

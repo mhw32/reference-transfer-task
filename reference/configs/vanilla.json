@@ -25,7 +25,7 @@
         },
         "text": {
             "n_pretrain_text": 256,
-            "n_embedding": 32,
+            "n_embedding": 64,
             "n_gru_hidden": 128,
             "gru_bidireqctional": false,
             "n_gru_layers": 1
@@ -33,12 +33,13 @@
     },
     "optim": {
         "optimizer": "Adam",
+        "val_freq": 5,
         "auto_schedule": false,
         "batch_size": 128, 
-        "learning_rate": 0.005,
+        "learning_rate": 0.001,
         "momentum": 0.9,
         "weight_decay": 1e-4,
         "patience": 10,
-        "epochs": 1000
+        "epochs": 500
     }
 }

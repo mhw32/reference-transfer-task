@@ -140,7 +140,7 @@ class Supervised(nn.Module):
                 sorted_len.data.tolist(),
                 batch_first=True,
             )
-            _, text_hid = self.text_gru(text_packed, text_gru_h0)
+            _, text_hid = self.text_gru(text_packed, text_gru_h0.unsqueeze(0))
             text_hid = text_hid.view(batch_size, -1)
 
             _, reversed_idx = torch.sort(sorted_idx)
