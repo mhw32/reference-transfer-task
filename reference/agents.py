@@ -1,12 +1,14 @@
 import os
 import sys
 import copy
+import json
 import torch
 import pickle
 import dotmap
 import logging
 import numpy as np
 from tqdm import tqdm
+from dotmap import DotMap
 from itertools import chain
 import torch.nn.functional as F
 from torchvision import transforms
@@ -612,12 +614,14 @@ class FeatureAgent(object):
     )
 
     def __init__(self, image_transforms = None):
-        self.config = self.DEFAULT_CONFIG_FILE
+        with open(self.DEFAULT_CONFIG_FILE, 'r') as fp:
+            self.config = DotMap(json.load(fp))
+        self.image_transforms = image_transforms
+        
         self._load_datasets()
         self.train_loader, self.train_len = self._create_dataloader(self.train_dataset)
         self.val_loader, self.val_len = self._create_dataloader(self.val_dataset)
         self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
-        self.image_transforms = image_transforms
         
     def _create_dataloader(self, dataset):
         dataset_size = len(dataset)
