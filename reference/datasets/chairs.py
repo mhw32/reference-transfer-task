@@ -97,6 +97,9 @@ class ChairsInContext(data.Dataset):
             with open(cache_clean_data, 'rb') as fp:
                 data = pickle.load(fp)
 
+        # shuffle data
+        np.random.shuffle(data)
+
         if self.data_size is not None:
             data = data[:self.data_size]
     

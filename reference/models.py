@@ -68,6 +68,15 @@ class Supervised(nn.Module):
                 nn.Linear(self.n_bottleneck, self.n_bottleneck),
             )
 
+        self.image_to_gru = nn.Sequential(
+            nn.Linear(self.n_bottleneck, self.n_gru_hidden),
+            nn.ReLU(),
+            nn.Linear(self.n_gru_hidden, self.n_gru_hidden),
+        )
+
+        self.dropout1 = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(0.5)
+
         if self.train_text_from_scratch:
             self.text_embed = nn.Embedding(self.vocab_size, self.n_embedding)
             self.text_gru = nn.GRU(
@@ -88,14 +97,15 @@ class Supervised(nn.Module):
                 nn.Linear(self.n_bottleneck, self.n_bottleneck),
             )
 
+        # https://arxiv.org/pdf/1905.02925.pdf
         self.joint_fc = nn.Sequential(
-            nn.Linear(self.n_bottleneck * 2, self.n_bottleneck),
+            nn.Linear(self.n_bottleneck * 2, 100),
+            nn.BatchNorm1d(100),
             nn.ReLU(),
-            nn.Linear(self.n_bottleneck, self.n_bottleneck // 2),
+            nn.Linear(100, 50),
+            nn.BatchNorm1d(50),
             nn.ReLU(),
-            nn.Linear(self.n_bottleneck // 2, self.n_bottleneck // 4),
-            nn.ReLU(),
-            nn.Linear(self.n_bottleneck // 4, 1),
+            nn.Linear(50, 1),
         )
 
     def forward(
@@ -115,6 +125,9 @@ class Supervised(nn.Module):
         else:
             assert image_emb is not None
             image_hid = self.image_fc(image_emb)
+
+        text_gru_h0 = self.image_to_gru(image_hid)
+        text_gru_h0 = self.dropout1(text_gru_h0)
         
         if self.train_text_from_scratch:
             batch_size = text_seq.size(0)
@@ -127,7 +140,7 @@ class Supervised(nn.Module):
                 sorted_len.data.tolist(),
                 batch_first=True,
             )
-            _, text_hid = self.text_gru(text_packed)
+            _, text_hid = self.text_gru(text_packed, text_gru_h0)
             text_hid = text_hid.view(batch_size, -1)
 
             _, reversed_idx = torch.sort(sorted_idx)
@@ -139,4 +152,5 @@ class Supervised(nn.Module):
             text_hid = self.text_fc(text_emb)
 
         concat = torch.cat((image_hid, text_hid), 1)
+        concat = self.dropout2(concat)
         return self.joint_fc(concat)

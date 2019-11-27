@@ -17,7 +17,7 @@
     "pretrain_image_embedding_dir": null,
     "pretrain_text_embedding_dir": null,
     "model": {
-        "n_bottleneck": 256,
+        "n_bottleneck": 100,
         "image": {
             "n_pretrain_image": 256,
             "n_image_channels": 3,
@@ -27,15 +27,15 @@
             "n_pretrain_text": 256,
             "n_embedding": 32,
             "n_gru_hidden": 128,
-            "gru_bidireqctional": true,
-            "n_gru_layers": 2
+            "gru_bidireqctional": false,
+            "n_gru_layers": 1
         }
     },
     "optim": {
         "optimizer": "Adam",
         "auto_schedule": false,
         "batch_size": 128, 
-        "learning_rate": 0.001,
+        "learning_rate": 0.005,
         "momentum": 0.9,
         "weight_decay": 1e-4,
         "patience": 10,
