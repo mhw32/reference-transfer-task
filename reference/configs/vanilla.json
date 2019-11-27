@@ -3,13 +3,13 @@
     "exp_name": "vanilla",
     "cuda": true,
     "gpu_device": 2,
-    "seed": 1337,
+    "seed": 42,
     "data_loader_workers": 8,
     "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
     "data": {
         "data_size": null,
-        "image_size": 64,
-        "context_condition": "all",
+        "image_size": 32,
+        "context_condition": "far",
         "split_mode": "easy"
     },
     "train_image_from_scratch": true,
@@ -35,10 +35,10 @@
         "optimizer": "Adam",
         "val_freq": 5,
         "auto_schedule": false,
-        "batch_size": 128, 
+        "batch_size": 100, 
         "learning_rate": 0.001,
         "momentum": 0.9,
-        "weight_decay": 1e-4,
+        "weight_decay": 0,
         "patience": 10,
         "epochs": 500
     }

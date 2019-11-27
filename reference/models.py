@@ -55,12 +55,12 @@ class Supervised(nn.Module):
                 nn.LeakyReLU(0.2, inplace=True),
                 # state size. (self.n_conv_filters*2) x 16 x 16
                 nn.Conv2d(self.n_conv_filters * 2, self.n_conv_filters * 4, 4, 2, 1, bias=False),
-                nn.BatchNorm2d(self.n_conv_filters * 4),
-                nn.LeakyReLU(0.2, inplace=True),
+                # nn.BatchNorm2d(self.n_conv_filters * 4),
+                # nn.LeakyReLU(0.2, inplace=True),
                 # state size. (self.n_conv_filters*4) x 8 x 8
-                nn.Conv2d(self.n_conv_filters * 4, self.n_conv_filters * 8, 4, 2, 1, bias=False),
+                # nn.Conv2d(self.n_conv_filters * 4, self.n_conv_filters * 8, 4, 2, 1, bias=False),
             )
-            self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
+            self.image_fc = nn.Linear(self.n_conv_filters * 4 * 4 * 4, self.n_bottleneck)
         else:
             self.image_fc = nn.Sequential(
                 nn.Linear(self.n_pretrain_image, self.n_bottleneck),
@@ -154,3 +154,101 @@ class Supervised(nn.Module):
         concat = torch.cat((image_hid, text_hid), 1)
         concat = self.dropout2(concat)
         return self.joint_fc(concat)
+
+
+class TextImageCompatibility(nn.Module):
+    
+    def __init__(
+            self, 
+            vocab_size, 
+            img_size = 32, 
+            channels = 3, 
+            embedding_dim = 64, 
+            hidden_dim = 256,
+            n_filters = 64,
+        ):
+        
+        super(TextImageCompatibility, self).__init__()
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.embedding_dim = embedding_dim
+
+        self.hidden_dim = 256
+
+        self.gru = nn.GRU(self.embedding_dim, self.hidden_dim, batch_first=True)
+        self.txt_lin = nn.Linear(self.hidden_dim, self.hidden_dim // 2)
+
+        self.conv = nn.Sequential(
+            nn.Conv2d(channels, n_filters, 2, 2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(n_filters, n_filters * 2, 2, 2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(n_filters * 2, n_filters * 4, 2, 2, padding=0),
+        )
+
+        cout = gen_32_conv_output_dim(img_size)
+        self.fc = nn.Linear(n_filters * 4 * cout**2, hidden_dim // 2)
+        self.cout = cout
+        self.n_filters = n_filters
+        self.sequential = nn.Sequential(
+            nn.Linear(self.hidden_dim, self.hidden_dim // 3), 
+            nn.ReLU(),
+            nn.Linear(self.hidden_dim // 3, self.hidden_dim // 9),
+            nn.ReLU(),
+            nn.Linear(self.hidden_dim // 9, self.hidden_dim // 27),
+            nn.ReLU(),
+            nn.Linear(self.hidden_dim // 27, 1),
+        )
+
+    def forward(self, img, seq, length):
+        assert img.size(0) == seq.size(0)
+        batch_size = img.size(0)
+
+        # CNN portion for image
+        out = self.conv(img)
+        out = out.view(batch_size, self.n_filters * 4 * self.cout**2)
+        img_hidden = self.fc(out)
+
+        # RNN portion for text
+        if batch_size > 1:
+            sorted_lengths, sorted_idx = torch.sort(length, descending=True)
+            seq = seq[sorted_idx]
+
+        # embed sequences
+        embed_seq = self.embedding(seq)
+
+        # pack padded sequences
+        packed = rnn_utils.pack_padded_sequence(
+            embed_seq,
+            sorted_lengths.data.tolist() if batch_size > 1 else length.data.tolist(), batch_first=True)
+
+        # forward RNN
+        _, hidden = self.gru(packed)
+        hidden = hidden[-1, ...]
+        
+        if batch_size > 1:
+            _, reversed_idx = torch.sort(sorted_idx)
+            hidden = hidden[reversed_idx]
+        txt_hidden = self.txt_lin(hidden)
+
+        # concat then forward
+        concat = torch.cat((txt_hidden, img_hidden), 1)
+
+        return self.sequential(concat)
+
+
+def gen_32_conv_output_dim(s):
+    s = get_conv_output_dim(s, 2, 0, 2)
+    s = get_conv_output_dim(s, 2, 0, 2)
+    s = get_conv_output_dim(s, 2, 0, 2)
+    return s
+
+
+def get_conv_output_dim(I, K, P, S):
+    # I = input height/length
+    # K = filter size
+    # P = padding
+    # S = stride
+    # O = output height/length
+    O = (I - K + 2*P)/float(S) + 1
+    return int(O)
+
