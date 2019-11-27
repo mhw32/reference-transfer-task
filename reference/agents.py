@@ -617,12 +617,27 @@ class FeatureAgent(object):
         with open(self.DEFAULT_CONFIG_FILE, 'r') as fp:
             self.config = DotMap(json.load(fp))
         self.image_transforms = image_transforms
-        
+        self._choose_device()
+
         self._load_datasets()
         self.train_loader, self.train_len = self._create_dataloader(self.train_dataset)
         self.val_loader, self.val_len = self._create_dataloader(self.val_dataset)
         self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
-        
+       
+    def _choose_device(self):
+        self.is_cuda = torch.cuda.is_available()
+        self.cuda = self.is_cuda & self.config.cuda
+        self.manual_seed = self.config.seed
+
+        if self.cuda:
+            torch.cuda.manual_seed(self.manual_seed)
+            self.device = torch.device("cuda")
+            torch.cuda.set_device(self.config.gpu_device)
+            print_cuda_statistics()
+        else:
+            self.device = torch.device("cpu")
+            torch.manual_seed(self.manual_seed)
+ 
     def _create_dataloader(self, dataset):
         dataset_size = len(dataset)
         loader = DataLoader(dataset, batch_size=self.config.optim.batch_size, shuffle=False)
@@ -688,6 +703,9 @@ class FeatureAgent(object):
         chair_embs_a, chair_embs_b, chair_embs_c, text_embs = [], [], [], []
 
         for index, chair_a, chair_b, chair_c, text_seq, text_len, label in data_loader:
+            chair_a = chair_a.to(self.device)
+            chair_b = chair_b.to(self.device)
+            chair_c = chair_c.to(self.device)
             
             if modality == 'image':
                 chair_emb_a = extract_fun(chair_a)

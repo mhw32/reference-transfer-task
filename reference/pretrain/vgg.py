@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     agent = FeatureAgent(image_transforms = image_transforms)
 
-    model = vgg19(pretrained=True)
+    model = vgg19(pretrained=True).to(agent.device)
     model.classifier = model.classifier[0]
     model.eval()
 
