@@ -35,6 +35,8 @@ class ChairsInContext(data.Dataset):
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = None,
+            min_token_occ = 2,
+            max_sent_len = 33,
         ):
 
         super().__init__()
@@ -53,6 +55,8 @@ class ChairsInContext(data.Dataset):
         self.split_mode = split_mode
         self.train_frac = train_frac
         self.val_frac = val_frac
+        self.min_token_occ = min_token_occ
+        self.max_sent_len = max_sent_len
         
         if image_transform is None:
             self.image_transform = transforms.Compose([
@@ -127,13 +131,12 @@ class ChairsInContext(data.Dataset):
         self.pad_index = self.w2i[self.pad_token]
         self.unk_index = self.w2i[self.unk_token]
 
-        text_seq, text_len, max_len, text_raw = self._process_text(text)
+        text_seq, text_len, text_raw = self._process_text(text)
 
         self.data = data
         self.labels = labels
         self.text_seq = text_seq
         self.text_len = text_len
-        self.max_len = max_len
         self.text_raw = text_raw
         self.text = text
 
@@ -233,14 +236,15 @@ class ChairsInContext(data.Dataset):
 
         pbar = tqdm(total=len(texts))
         for text in texts:
-            tokens = word_tokenize(text)
+            tokens = word_tokenize(text.lower())
             w2c.update(tokens)
             pbar.update()
         pbar.close()
 
         for w, c in w2c.items():
-            i2w[len(w2i)] = w
-            w2i[w] = len(w2i)
+            if c >= self.min_token_occ:
+                i2w[len(w2i)] = w
+                w2i[w] = len(w2i)
 
         assert len(w2i) == len(i2w)
         vocab = dict(w2i=w2i, i2w=i2w)
@@ -250,28 +254,22 @@ class ChairsInContext(data.Dataset):
     def _process_text(self, text):
         text_seq, text_len, raw_tokens = [], [], []
 
-        max_len = 0
         for i in range(len(text)):
-            _tokens = word_tokenize(text[i])
-            tokens = [SOS_TOKEN] + _tokens + [EOS_TOKEN]
+            _tokens = word_tokenize(text[i].lower())
+            
+            tokens = [SOS_TOKEN] + _tokens[:self.max_sent_len] + [EOS_TOKEN]
             length = len(tokens)
-            max_len = max(max_len, length)
-
+            tokens.extend([PAD_TOKEN] * (self.max_sent_len + 2 - length))
+            tokens = [self.w2i.get(token, self.w2i[UNK_TOKEN]) for token in tokens]
+            
             text_seq.append(tokens)
             text_len.append(length)
             raw_tokens.append(_tokens)
 
-        for i in range(len(text)):
-            tokens = text_seq[i]
-            length = text_len[i]
-            tokens.extend([PAD_TOKEN] * (max_len - length))
-            tokens = [self.w2i.get(token, self.w2i[UNK_TOKEN]) for token in tokens]
-            text_seq[i] = tokens
-
         text_seq = np.array(text_seq)
         text_len = np.array(text_len)
 
-        return text_seq, text_len, max_len, raw_tokens
+        return text_seq, text_len, raw_tokens
 
     def __len__(self):
         return len(self.data)
