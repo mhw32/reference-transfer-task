@@ -46,13 +46,21 @@ class Supervised(nn.Module):
 
         if self.train_image_from_scratch:
             self.image_conv = nn.Sequential(
-                nn.Conv2d(self.n_image_channels, self.n_conv_filters, 2, 2, padding=0),
-                nn.LeakyReLU(0.1),
-                nn.Conv2d(self.n_conv_filters, self.n_conv_filters * 2, 2, 2, padding=0),
-                nn.LeakyReLU(0.1),
-                nn.Conv2d(self.n_conv_filters * 2, self.n_conv_filters * 4, 2, 2, padding=0),
+                # input is (self.n_image_channels) x 64 x 64
+                nn.Conv2d(self.n_image_channels, self.n_conv_filters, 4, 2, 1, bias=False),
+                nn.LeakyReLU(0.2, inplace=True),
+                # state size. (self.n_conv_filters) x 32 x 32
+                nn.Conv2d(self.n_conv_filters, self.n_conv_filters * 2, 4, 2, 1, bias=False),
+                nn.BatchNorm2d(self.n_conv_filters * 2),
+                nn.LeakyReLU(0.2, inplace=True),
+                # state size. (self.n_conv_filters*2) x 16 x 16
+                nn.Conv2d(self.n_conv_filters * 2, self.n_conv_filters * 4, 4, 2, 1, bias=False),
+                nn.BatchNorm2d(self.n_conv_filters * 4),
+                nn.LeakyReLU(0.2, inplace=True),
+                # state size. (self.n_conv_filters*4) x 8 x 8
+                nn.Conv2d(self.n_conv_filters * 4, self.n_conv_filters * 8, 4, 2, 1, bias=False),
             )
-            self.image_fc = nn.Linear(self.n_conv_filters * 4, self.n_bottleneck)
+            self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
         else:
             self.image_fc = nn.Linear(self.n_pretrain_image, self.n_bottleneck)
 
@@ -68,16 +76,16 @@ class Supervised(nn.Module):
             n_gru_effect_hidden = self.n_gru_hidden * self.n_gru_layers
             if self.gru_bidirectional:
                 n_gru_effect_hidden *= 2
-            self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck // 2)
+            self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck)
         else:
             self.text_fc = nn.Linear(self.n_pretrain_text, self.n_bottleneck)
 
         self.joint_fc = nn.Sequential(
+            nn.Linear(self.n_bottleneck * 2, self.n_bottleneck),
+            nn.LeakyReLU(),
             nn.Linear(self.n_bottleneck, self.n_bottleneck // 2),
             nn.LeakyReLU(),
-            nn.Linear(self.n_bottleneck // 2, self.n_bottleneck // 4),
-            nn.LeakyReLU(),
-            nn.Linear(self.n_bottleneck // 4, 1),
+            nn.Linear(self.n_bottleneck // 2, 1),
         )
 
     def forward(

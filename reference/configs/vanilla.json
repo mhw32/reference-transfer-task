@@ -8,16 +8,16 @@
     "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
     "data": {
         "data_size": null,
-        "image_size": 32,
+        "image_size": 64,
         "context_condition": "all",
         "split_mode": "easy"
     },
-    "train_image_from_scratch": false,
-    "train_text_from_scratch": false,
+    "train_image_from_scratch": true,
+    "train_text_from_scratch": true,
     "pretrain_image_embedding_dir": null,
     "pretrain_text_embedding_dir": null,
     "model": {
-        "n_bottleneck": 64,
+        "n_bottleneck": 256,
         "image": {
             "n_pretrain_image": 256,
             "n_image_channels": 3,
@@ -26,9 +26,9 @@
         "text": {
             "n_pretrain_text": 256,
             "n_embedding": 32,
-            "n_gru_hidden": 64,
+            "n_gru_hidden": 128,
             "gru_bidireqctional": true,
-            "n_gru_layers": 1
+            "n_gru_layers": 2
         }
     },
     "optim": {

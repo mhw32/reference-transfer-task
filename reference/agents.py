@@ -158,11 +158,11 @@ class BaseAgent(object):
 
 class TrainAgent(BaseAgent):
     """Agent class to train reference game witness functions."""
-    
+   
     def __init__(self, config):
         super().__init__(config)
 
-        if self.config.train_image_from_scratch:
+        if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
             train_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir, 
@@ -179,7 +179,7 @@ class TrainAgent(BaseAgent):
             with open(val_embedding_file) as fp:
                 self.val_image_embeddings = pickle.load(fp)
 
-        if self.config.train_text_from_scratch:
+        if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
             train_embedding_file = os.path.join(
                 self.config.pretrain_text_embedding_dir,
@@ -197,29 +197,29 @@ class TrainAgent(BaseAgent):
                 self.val_text_embeddings = pickle.load(fp)
 
     def _load_datasets(self):
-        train_transforms = transforms.ToTensor()
         train_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = None,
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
             train_frac = 0.64,
             val_frac = 0.16,
-            image_transform = train_transforms,
+            image_transform = None,
         )
-        val_transforms = transforms.ToTensor()
         val_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',  # NOTE: do not bleed test in
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
             train_frac = 0.64,
             val_frac = 0.16,
-            image_transform = val_transforms,
+            image_transform = None,
         )
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -244,6 +244,7 @@ class TrainAgent(BaseAgent):
             gru_bidirectional = self.config.model.text.gru_bidireqctional,
             n_gru_layers = self.config.model.text.n_gru_layers,
         )
+        self.model = self.model.to(self.device)
 
     def _create_optimizer(self):
         self.optim = torch.optim.SGD(
@@ -280,7 +281,7 @@ class TrainAgent(BaseAgent):
         self.model.train()
         epoch_loss = AverageMeter()
 
-        for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.train_loader:
+        for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.train_loader:
             batch_size = chair_a.size(0)
 
             chair_a = chair_a.to(self.device)
@@ -291,12 +292,12 @@ class TrainAgent(BaseAgent):
             label = label.to(self.device)
 
             chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
-            if self.config.train_image_from_scratch:
+            if not self.config.train_image_from_scratch:
                 chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
                     index, self.train_image_embeddings, self.device)
 
             text_emb = None
-            if self.config.train_text_from_scratch:
+            if not self.config.train_text_from_scratch:
                 text_emb = extract_text_embeddings(index, self.train_text_embeddings, self.device)
 
             logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
@@ -333,7 +334,7 @@ class TrainAgent(BaseAgent):
         num_total = 0.
 
         with torch.no_grad():
-            for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.val_loader:
+            for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.val_loader:
                 batch_size = chair_a.size(0)
 
                 chair_a = chair_a.to(self.device)
@@ -344,12 +345,12 @@ class TrainAgent(BaseAgent):
                 label = label.to(self.device)
 
                 chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
-                if self.config.train_image_from_scratch:
+                if not self.config.train_image_from_scratch:
                     chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
                         index, self.val_image_embeddings, self.device)
 
                 text_emb = None
-                if self.config.train_text_from_scratch:
+                if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.val_text_embeddings, self.device)
 
                 logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
@@ -465,7 +466,7 @@ class EvaluateAgent(object):
         self.test_losses = []
         self.test_accs = []
 
-        if self.config.train_image_from_scratch:
+        if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
             test_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir, 
@@ -475,7 +476,7 @@ class EvaluateAgent(object):
             with open(test_embedding_file) as fp:
                 self.test_image_embeddings = pickle.load(fp)
 
-        if self.config.train_text_from_scratch:
+        if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
             test_embedding_file = os.path.join(
                 self.config.pretrain_text_embedding_dir,
@@ -486,17 +487,17 @@ class EvaluateAgent(object):
                 self.test_text_embeddings = pickle.load(fp)
 
     def _load_datasets(self):
-        test_transforms = transforms.ToTensor()
         test_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = self.agent.train_dataset.vocab,
             split = 'test',
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
             train_frac = 0.64,
             val_frac = 0.16,
-            image_transform = test_transforms,
+            image_transform = None,
         )
         self.test_dataset = test_dataset
         self.vocab = self.agent.train_dataset.vocab
@@ -524,7 +525,7 @@ class EvaluateAgent(object):
         num_total = 0.
 
         with torch.no_grad():
-            for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in self.test_loader:
+            for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.test_loader:
                 batch_size = chair_a.size(0)
 
                 chair_a = chair_a.to(self.agent.device)
@@ -535,12 +536,12 @@ class EvaluateAgent(object):
                 label = label.to(self.agent.device)
 
                 chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
-                if self.config.train_image_from_scratch:
+                if not self.config.train_image_from_scratch:
                     chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
                         index, self.test_image_embeddings, self.agent.device)
 
                 text_emb = None
-                if self.config.train_text_from_scratch:
+                if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.test_text_embeddings, self.agent.device)
 
                 logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
@@ -615,6 +616,7 @@ class FeatureAgent(object):
         train_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = None,
             split = 'train', 
             context_condition = self.config.data.context_condition,
@@ -626,6 +628,7 @@ class FeatureAgent(object):
         val_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',
             context_condition = self.config.data.context_condition,
@@ -637,6 +640,7 @@ class FeatureAgent(object):
         test_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
+            image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'test',
             context_condition = self.config.data.context_condition,
@@ -667,7 +671,7 @@ class FeatureAgent(object):
 
         chair_embs_a, chair_embs_b, chair_embs_c, text_embs = [], [], [], []
 
-        for index, chair_a, chair_b, chair_c, _, text_seq, text_len, label in data_loader:
+        for index, chair_a, chair_b, chair_c, text_seq, text_len, label in data_loader:
             
             if modality == 'image':
                 chair_emb_a = extract_fun(chair_a)

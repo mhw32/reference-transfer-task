@@ -27,6 +27,7 @@ class ChairsInContext(data.Dataset):
             self, 
             data_dir, 
             data_size = None,
+            image_size = 64,
             vocab = None, 
             split = 'train', 
             context_condition = 'all',
@@ -45,14 +46,20 @@ class ChairsInContext(data.Dataset):
         self.image_dir = os.path.join(self.data_dir, 'images')
         self.cache_dir = os.path.join(self.data_dir, 'cache')
         self.data_size = data_size
+        self.image_size = image_size
         self.vocab = vocab
         self.split = split
         self.context_condition = context_condition
         self.split_mode = split_mode
         self.train_frac = train_frac
         self.val_frac = val_frac
+        
         if image_transform is None:
-            self.image_transform = transforms.ToTensor()
+            self.image_transform = transforms.Compose([
+                transforms.Resize(self.image_size),
+                transforms.CenterCrop(self.image_size),
+                transforms.ToTensor(),
+            ])
         else:
             self.image_transform = image_transform
    
