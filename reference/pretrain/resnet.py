@@ -26,8 +26,9 @@ if __name__ == "__main__":
 
     agent = FeatureAgent(image_transforms = image_transforms)
 
-    model = resnet34(pretrained=True)
-    model.classifier = model.classifier[0]
+    model = resnet34(pretrained=True).to(agent.device)
+    modules = list(model.children())[:-1]
+    model = nn.Sequential(*modules)
     model.eval()
 
     def extract(chair):
@@ -36,17 +37,21 @@ if __name__ == "__main__":
 
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
         extract, modality='image', split='train')
-    val_chair_a, val_chair_b, val_chair_c = agent.extract_features(
-        extract, modality='image', split='val')
-    test_chair_a, test_chair_b, test_chair_c = agent.extract_features(
-        extract, modality='image', split='test')
 
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/train_chair_a.npy', train_chair_a.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/train_chair_b.npy', train_chair_b.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/train_chair_c.npy', train_chair_c.numpy())
+    
+    val_chair_a, val_chair_b, val_chair_c = agent.extract_features(
+        extract, modality='image', split='val')
+    
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/val_chair_a.npy', val_chair_a.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/val_chair_b.npy', val_chair_b.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/val_chair_c.npy', val_chair_c.numpy())
+    
+    test_chair_a, test_chair_b, test_chair_c = agent.extract_features(
+        extract, modality='image', split='test')
+    
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/test_chair_a.npy', test_chair_a.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/test_chair_b.npy', test_chair_b.numpy())
     np.save('/mnt/fs5/wumike/reference/pretrain/imagenet/test_chair_c.npy', test_chair_c.numpy())

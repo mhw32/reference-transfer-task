@@ -262,13 +262,16 @@ class TrainAgent(BaseAgent):
                 lr = self.config.optim.learning_rate,
                 weight_decay = self.config.optim.weight_decay,
             )
-        self.scheduler = ReduceLROnPlateau(
-            self.optim, 
-            mode = 'min',
-            factor = 0.1,
-            verbose = True,
-            patience = self.config.optim.patience,
-        )
+        if self.config.optim.auto_schedule:
+            self.scheduler = ReduceLROnPlateau(
+                self.optim, 
+                mode = 'min',
+                factor = 0.1,
+                verbose = True,
+                patience = self.config.optim.patience,
+            )
+        else:
+            self.scheduler = None
 
     def train(self):
         """
@@ -279,7 +282,8 @@ class TrainAgent(BaseAgent):
             self.current_epoch = epoch
             self.train_one_epoch()
             self.validate()
-            self.scheduler.step(self.current_val_loss)
+            if self.config.optim.auto_schedule:
+                self.scheduler.step(self.current_val_loss)
             self.save_checkpoint()
 
     def train_one_epoch(self):
