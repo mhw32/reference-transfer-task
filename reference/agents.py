@@ -207,8 +207,8 @@ class TrainAgent(BaseAgent):
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = None,
         )
         val_dataset = ChairsInContext(
@@ -219,8 +219,8 @@ class TrainAgent(BaseAgent):
             split = 'val',  # NOTE: do not bleed test in
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = None,
         )
         self.train_dataset = train_dataset
@@ -514,8 +514,8 @@ class EvaluateAgent(object):
             split = 'test',
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = None,
         )
         self.test_dataset = test_dataset
@@ -657,8 +657,8 @@ class FeatureAgent(object):
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = self.image_transforms,
         )
         val_dataset = ChairsInContext(
@@ -669,8 +669,8 @@ class FeatureAgent(object):
             split = 'val',
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = self.image_transforms,
         )
         test_dataset = ChairsInContext(
@@ -681,8 +681,8 @@ class FeatureAgent(object):
             split = 'test',
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
-            train_frac = 0.64,
-            val_frac = 0.16,
+            train_frac = 0.80,
+            val_frac = 0.10,
             image_transform = self.image_transforms,
         )
         self.train_dataset = train_dataset

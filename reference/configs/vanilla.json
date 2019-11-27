@@ -9,7 +9,7 @@
     "data": {
         "data_size": null,
         "image_size": 64,
-        "context_condition": "far",
+        "context_condition": "all",
         "split_mode": "easy"
     },
     "train_image_from_scratch": true,
