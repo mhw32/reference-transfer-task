@@ -247,12 +247,19 @@ class TrainAgent(BaseAgent):
         self.model = self.model.to(self.device)
 
     def _create_optimizer(self):
-        self.optim = torch.optim.SGD(
-            self.model.parameters(),
-            lr = self.config.optim.learning_rate,
-            momentum = self.config.optim.momentum,
-            weight_decay = self.config.optim.weight_decay,
-        )
+        if self.config.optim.optimizer == 'SGD':
+            self.optim = torch.optim.SGD(
+                self.model.parameters(),
+                lr = self.config.optim.learning_rate,
+                momentum = self.config.optim.momentum,
+                weight_decay = self.config.optim.weight_decay,
+            )
+        elif self.config.optim.optimizer == 'Adam':
+            self.optim = torch.optim.Adam(
+                self.model.parameters(),
+                lr = self.config.optim.learning_rate,
+                weight_decay = self.config.optim.weight_decay,
+            )
         self.scheduler = ReduceLROnPlateau(
             self.optim, 
             mode = 'min',

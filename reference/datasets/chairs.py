@@ -62,7 +62,7 @@ class ChairsInContext(data.Dataset):
             ])
         else:
             self.image_transform = image_transform
-   
+
         cache_clean_data = os.path.join(
             self.cache_dir,
             f'clean_data_{self.context_condition}.pickle',
@@ -73,7 +73,7 @@ class ChairsInContext(data.Dataset):
             df = pd.read_csv(csv_path)
             df = df[df['correct'] == True]
             df = df[df['communication_role'] == 'speaker']
-            
+          
             if self.context_condition != 'all':
                 df = df[df['context_condition'] == self.context_condition]
             
@@ -103,7 +103,7 @@ class ChairsInContext(data.Dataset):
             data = self._process_hard(data)
         else:
             raise Exception(f'split_mode {self.split_mode} not supported.')
-    
+   
         labels = self._process_labels(data)
 
         text = [d[-1] for d in data]
@@ -280,7 +280,7 @@ class ChairsInContext(data.Dataset):
         return self.text_raw[index]
 
     def __getitem__(self, index):
-        chair_a, chair_b, chair_c, _, _ = self.data[index]
+        chair_a, chair_b, chair_c, target_chair, _ = self.data[index]
         label = self.labels[index]
 
         chair_a_pil = Image.open(os.path.join(self.image_dir, chair_a + '.png')).convert('RGB')

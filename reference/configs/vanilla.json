@@ -9,7 +9,7 @@
     "data": {
         "data_size": null,
         "image_size": 64,
-        "context_condition": "all",
+        "context_condition": "far",
         "split_mode": "easy"
     },
     "train_image_from_scratch": true,
@@ -32,6 +32,7 @@
         }
     },
     "optim": {
+        "optimizer": "SGD",
         "batch_size": 128, 
         "learning_rate": 0.03,
         "momentum": 0.9,

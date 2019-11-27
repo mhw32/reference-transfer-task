@@ -116,22 +116,19 @@ class Supervised(nn.Module):
         
         if self.train_text_from_scratch:
             batch_size = text_seq.size(0)
-            
-            if batch_size > 1:
-                sorted_len, sorted_idx = torch.sort(text_len, descending=True)
+            sorted_len, sorted_idx = torch.sort(text_len, descending=True)
             
             text_seq = text_seq[sorted_idx]
             text_emb = self.text_embed(text_seq)
             text_packed = rnn_utils.pack_padded_sequence(
                 text_emb,
-                sorted_len.data.tolist() if batch_size > 1 else text_len.data.tolist(), 
+                sorted_len.data.tolist(),
                 batch_first=True,
             )
             _, text_hid = self.text_gru(text_packed)
             text_hid = text_hid.view(batch_size, -1)
 
-            if batch_size > 1:
-                _, reversed_idx = torch.sort(sorted_idx)
+            _, reversed_idx = torch.sort(sorted_idx)
             
             text_hid = text_hid[reversed_idx]
             text_hid = self.text_fc(text_hid)
