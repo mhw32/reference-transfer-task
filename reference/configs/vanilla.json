@@ -33,10 +33,10 @@
     },
     "optim": {
         "batch_size": 128, 
-        "learning_rate": 0.01,
+        "learning_rate": 0.03,
         "momentum": 0.9,
         "weight_decay": 1e-4,
         "patience": 10,
-        "epochs": 100
+        "epochs": 1000
     }
 }

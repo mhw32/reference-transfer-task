@@ -323,6 +323,8 @@ class TrainAgent(BaseAgent):
         self.current_loss = epoch_loss.avg
         tqdm_batch.close()
 
+        print(f"Training Loss: {self.current_loss}")
+
     def validate(self):
         num_batches = self.val_len // self.config.optim.batch_size
         tqdm_batch = tqdm(total=num_batches, desc="[Val]")
@@ -362,7 +364,8 @@ class TrainAgent(BaseAgent):
                 loss = F.cross_entropy(logits, label)
                 epoch_loss.update(loss.item(), batch_size)
 
-                pred = F.softmax(logits, dim=1).max(1)
+                pred = F.softmax(logits, dim=1)
+                _, pred = torch.max(pred, 1)
                 num_correct += torch.sum(pred == label).item()
                 num_total += batch_size
 
@@ -383,6 +386,8 @@ class TrainAgent(BaseAgent):
         # save if this was the best validation accuracy
         if self.current_val_loss <= self.best_val_loss:
             self.best_val_loss = self.current_val_loss
+
+        print(f"Validation Loss: {self.current_val_loss}")
 
         return self.current_val_loss
 
