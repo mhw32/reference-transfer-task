@@ -1,0 +1,14 @@
+Image       Text        Test Acc.
+---------------------------------
+Vanilla     Vanilla     0.721
+Vanilla     Word2Vec    0.715
+Vanilla     RoBERTa     0.707
+Vanilla     InferSent   0.740
+VGG19       Vanilla     0.673
+VGG19       Word2Vec    0.692
+VGG19       RoBERTa     0.345
+VGG19       InferSent   0.686
+ResNet32    Vanilla     0.714
+ResNet32    Word2Vec    0.719
+ResNet32    RoBERTa     0.649
+ResNet32    InferSent   0.722
