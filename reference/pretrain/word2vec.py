@@ -1,6 +1,7 @@
 import os
 import time
 import nltk
+import pickle
 import numpy as np
 from tqdm import tqdm
 
@@ -28,6 +29,11 @@ if __name__ == "__main__":
     word_dict = agent.train_dataset.vocab['w2i']
     word_vec = get_w2v(word_dict)
 
+    out_dir = '/mnt/fs5/wumike/reference/pretrain/word2vec'
+
+    with open(f'{out_dir}/word_dict.pickle', 'wb') as fp:
+        pickle.dump(word_vec, fp)
+
     def extract(raw_text_list):
         batch_embs = []
         for raw_text in raw_text_list:
@@ -48,6 +54,6 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    np.save('/mnt/fs5/wumike/reference/pretrain/word2vec/train.npy', train_text_embs.numpy())
-    np.save('/mnt/fs5/wumike/reference/pretrain/word2vec/val.npy', val_text_embs.numpy())
-    np.save('/mnt/fs5/wumike/reference/pretrain/word2vec/test.npy', test_text_embs.numpy())
+    np.save(f'{out_dir}/train.npy', train_text_embs.numpy())
+    np.save(f'{out_dir}/val.npy', val_text_embs.numpy())
+    np.save(f'{out_dir}/test.npy', test_text_embs.numpy())
