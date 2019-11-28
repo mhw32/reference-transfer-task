@@ -383,7 +383,12 @@ class TrainAgent(BaseAgent):
                 chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
                 if not self.config.train_image_from_scratch:
                     chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
-                        index, self.val_image_embeddings, self.device)
+                        index, 
+                        self.val_chair_a_embeddings,
+                        self.val_chair_b_embeddings,
+                        self.val_chair_c_embeddings,
+                        self.device,
+                    )
 
                 text_emb = None
                 if not self.config.train_text_from_scratch:
@@ -584,7 +589,12 @@ class EvaluateAgent(object):
                 chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
                 if not self.config.train_image_from_scratch:
                     chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
-                        index, self.test_image_embeddings, self.agent.device)
+                        index, 
+                        self.test_chair_a_embeddings,
+                        self.test_chair_b_embeddings,
+                        self.test_chair_c_embeddings,
+                        self.agent.device,
+                    )
 
                 text_emb = None
                 if not self.config.train_text_from_scratch:
