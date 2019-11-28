@@ -1,0 +1,6 @@
+[submodule "reference/localagg"]
+	path = reference/localagg
+	url = https://github.com/mhw32/multimodal-local-aggregation
+[submodule "reference/mvae"]
+	path = reference/mvae
+	url = https://github.com/mhw32/multimodal-family
