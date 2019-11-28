@@ -12,7 +12,6 @@ if __name__ == "__main__":
     def extract(raw_text_list):
         features = []
         for raw_text in raw_text_list:
-            breakpoint()
             raw_text = ' '.join(raw_text)
             tokens = roberta.encode(raw_text)
             # last layer features [1, 5, 1024]
