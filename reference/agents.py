@@ -168,37 +168,53 @@ class TrainAgent(BaseAgent):
 
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
-            train_embedding_file = os.path.join(
+            train_chair_a_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir, 
-                'train.pickle',
+                'train_chair_a.npy',
             )
-            val_embedding_file = os.path.join(
+            train_chair_b_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir, 
+                'train_chair_b.npy',
+            )
+            train_chair_c_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'val.pickle',
+                'train_chair_c.npy',
+            )
+
+            val_chair_a_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'val_chair_a.npy',
+            )
+            val_chair_b_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'val_chair_b.npy',
+            )
+            val_chair_c_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'val_chair_c.npy',
             )
             
-            with open(train_embedding_file) as fp:
-                self.train_image_embeddings = pickle.load(fp)
+            self.train_chair_a_embeddings = np.load(train_chair_a_embedding_file)
+            self.train_chair_b_embeddings = np.load(train_chair_b_embedding_file)
+            self.train_chair_c_embeddings = np.load(train_chair_c_embedding_file)
 
-            with open(val_embedding_file) as fp:
-                self.val_image_embeddings = pickle.load(fp)
+            self.val_chair_a_embeddings = np.load(val_chair_a_embedding_file)
+            self.val_chair_b_embeddings = np.load(val_chair_b_embedding_file)
+            self.val_chair_c_embeddings = np.load(val_chair_c_embedding_file)
 
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
             train_embedding_file = os.path.join(
                 self.config.pretrain_text_embedding_dir,
-                'train.pickle',
+                'train.npy',
             )
             val_embedding_file = os.path.join(
                 self.config.pretrain_text_embedding_dir,
-                'val.pickle',
+                'val.npy',
             )
 
-            with open(train_embedding_file) as fp:
-                self.train_text_embeddings = pickle.load(fp)
-
-            with open(val_embedding_file) as fp:
-                self.val_text_embeddings = pickle.load(fp)
+            self.train_text_embeddings = np.load(train_embedding_file)
+            self.val_text_embeddings = np.load(val_embedding_file)
 
     def _load_datasets(self):
         train_dataset = ChairsInContext(
@@ -296,7 +312,7 @@ class TrainAgent(BaseAgent):
         self.model.train()
         epoch_loss = AverageMeter()
 
-        for _, chair_a, chair_b, chair_c, text_seq, text_len, label in self.train_loader:
+        for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.train_loader:
             batch_size = chair_a.size(0)
 
             chair_a = chair_a.to(self.device)
@@ -309,7 +325,12 @@ class TrainAgent(BaseAgent):
             chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
             if not self.config.train_image_from_scratch:
                 chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
-                    index, self.train_image_embeddings, self.device)
+                    index, 
+                    self.train_chair_a_embeddings,
+                    self.train_chair_b_embeddings,
+                    self.train_chair_c_embeddings,
+                    self.device,
+                )
 
             text_emb = None
             if not self.config.train_text_from_scratch:
@@ -484,23 +505,32 @@ class EvaluateAgent(object):
 
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
-            test_embedding_file = os.path.join(
-                self.config.pretrain_image_embedding_dir, 
-                'test.pickle',
+            
+            test_chair_a_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'test_chair_a.npy',
             )
- 
-            with open(test_embedding_file) as fp:
-                self.test_image_embeddings = pickle.load(fp)
+            test_chair_b_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'test_chair_b.npy',
+            )
+            test_chair_c_embedding_file = os.path.join(
+                self.config.pretrain_image_embedding_dir,
+                'test_chair_c.npy',
+            ) 
+            
+            self.test_chair_a_embeddings = np.load(test_chair_a_embedding_file)
+            self.test_chair_b_embeddings = np.load(test_chair_b_embedding_file)
+            self.test_chair_c_embeddings = np.load(test_chair_c_embedding_file)
 
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
             test_embedding_file = os.path.join(
                 self.config.pretrain_text_embedding_dir,
-                'test.pickle',
+                'test.npy',
             )
 
-            with open(test_embedding_file) as fp:
-                self.test_text_embeddings = pickle.load(fp)
+            self.test_text_embeddings = np.load(test_embedding_file)
 
     def _load_datasets(self):
         test_dataset = ChairsInContext(
@@ -739,10 +769,18 @@ class FeatureAgent(object):
             return text_embs
 
 
-def extract_chair_embeddings(index, image_embeddings, device):
+def extract_chair_embeddings(
+        index, 
+        chair_a_embeddings,
+        chair_b_embeddings,
+        chair_c_embeddings,
+        device,
+    ):
     chair_emb_a, chair_emb_b, chair_emb_c = [], [], []
     for ix in index:
-        chair_a_ix, chair_b_ix, chair_c_ix = image_embeddings[ix.item()] 
+        chair_a_ix = chair_a_embeddings[ix.item()]
+        chair_b_ix = chair_b_embeddings[ix.item()] 
+        chair_c_ix = chair_c_embeddings[ix.item()]
         chair_emb_a.append(chair_a_ix)
         chair_emb_b.append(chair_b_ix)
         chair_emb_c.append(chair_c_ix)

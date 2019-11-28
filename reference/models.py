@@ -92,7 +92,7 @@ class Witness(nn.Module):
             self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck)
         else:
             self.text_fc = nn.Sequential(
-                nn.Linear(self.n_pertrain_text, self.n_bottleneck),
+                nn.Linear(self.n_pretrain_text, self.n_bottleneck),
                 nn.ReLU(),
                 nn.Linear(self.n_bottleneck, self.n_bottleneck),
             )
