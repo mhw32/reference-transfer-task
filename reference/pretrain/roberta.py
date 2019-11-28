@@ -17,7 +17,7 @@ if __name__ == "__main__":
             # last layer features [1, 5, 1024]
             last_layer_features = roberta.extract_features(tokens)
             sent_features = last_layer_features.mean(1)  # take a mean over the words
-            features.append(sent_features)
+            features.append(sent_features.detach().cpu())
         features = torch.cat(features, dim=0)
         return features
 
