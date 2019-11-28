@@ -60,7 +60,11 @@ class Witness(nn.Module):
             )
             self.image_fc = nn.Linear(self.n_conv_filters * 8 * 4 * 4, self.n_bottleneck)
         else:
-            self.image_fc = nn.Linear(self.n_pretrain_image, self.n_bottleneck)
+            self.image_fc = nn.Sequential(
+                nn.Linear(self.n_pretrain_image, self.n_bottleneck),
+                nn.ReLU(),
+                nn.Linear(self.n_bottleneck, self.n_bottleneck),
+            )
 
         self.image_to_gru = nn.Sequential(
             nn.Linear(self.n_bottleneck, self.n_gru_hidden),
@@ -87,7 +91,11 @@ class Witness(nn.Module):
             
             self.text_fc = nn.Linear(n_gru_effect_hidden, self.n_bottleneck)
         else:
-            self.text_fc = nn.Linear(self.n_pertrain_text, self.n_bottleneck)
+            self.text_fc = nn.Sequential(
+                nn.Linear(self.n_pertrain_text, self.n_bottleneck),
+                nn.ReLU(),
+                nn.Linear(self.n_bottleneck, self.n_bottleneck),
+            )
 
         # https://arxiv.org/pdf/1905.02925.pdf
         self.joint_fc = nn.Sequential(
