@@ -1,4 +1,5 @@
 import os
+import math
 import json
 import pickle
 import numpy as np
@@ -43,6 +44,10 @@ class ChairsInContext(data.Dataset):
 
         assert split_mode in ['easy', 'hard']
         assert context_condition in ['all', 'far', 'close']
+
+        if data_size is not None:
+            assert data_size > 0
+            assert data_size <= 1
 
         self.data_dir = data_dir
         self.image_dir = os.path.join(self.data_dir, 'images')
@@ -97,9 +102,6 @@ class ChairsInContext(data.Dataset):
             with open(cache_clean_data, 'rb') as fp:
                 data = pickle.load(fp)
 
-        if self.data_size is not None:
-            data = data[:self.data_size]
-    
         if self.split_mode == 'easy':
             # for each unique chair, divide all rows containing it into training and test sets
             data = self._process_easy(data)
@@ -107,7 +109,15 @@ class ChairsInContext(data.Dataset):
             data = self._process_hard(data)
         else:
             raise Exception(f'split_mode {self.split_mode} not supported.')
-   
+
+        if self.split == 'train':
+            if data_size is not None:
+                n_train_total = len(data)
+                indices = np.random.choice(np.arange(n_train_total))
+                n_train_total = int(math.ceil(data_size * n_train_total))
+                indices = np.random.choice(indices, size=n_train_total)
+                data = data[indices]
+
         labels = self._process_labels(data)
 
         text = [d[-1] for d in data]
@@ -185,7 +195,7 @@ class ChairsInContext(data.Dataset):
                 raise Exception(f'split {self.split} not supported.')
         
         processed = np.concatenate(processed, axis=0)
-        
+
         return processed
 
     def _process_hard(self, data):
