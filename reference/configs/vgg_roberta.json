@@ -1,6 +1,6 @@
 {
     "exp_base": "/mnt/fs5/wumike/reference/trained_models/11_25/",
-    "exp_name": "roberta",
+    "exp_name": "vgg_roberta",
     "cuda": true,
     "gpu_device": 2,
     "seed": 42,
