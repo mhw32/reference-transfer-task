@@ -25,7 +25,6 @@
         },
         "text": {
             "n_pretrain_text": 256,
-            "pretrain_text_rnn": false,
             "n_embedding": 64,
             "n_gru_hidden": 128,
             "gru_bidirectional": false,
