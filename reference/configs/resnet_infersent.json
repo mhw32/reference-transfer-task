@@ -1,8 +1,8 @@
 {
     "exp_base": "/mnt/fs5/wumike/reference/trained_models/11_25/",
-    "exp_name": "vanilla",
+    "exp_name": "infersent",
     "cuda": true,
-    "gpu_device": 2,
+    "gpu_device": 3,
     "seed": 42,
     "data_loader_workers": 8,
     "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
@@ -12,10 +12,10 @@
         "context_condition": "all",
         "split_mode": "easy"
     },
-    "train_image_from_scratch": true,
-    "train_text_from_scratch": true,
-    "pretrain_image_embedding_dir": null,
-    "pretrain_text_embedding_dir": null,
+    "train_image_from_scratch": false,
+    "train_text_from_scratch": false,
+    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/resnet",
+    "pretrain_text_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/infersent",
     "model": {
         "n_bottleneck": 128,
         "image": {
