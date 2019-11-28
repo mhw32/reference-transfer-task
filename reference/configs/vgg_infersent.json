@@ -19,12 +19,12 @@
     "model": {
         "n_bottleneck": 128,
         "image": {
-            "n_pretrain_image": 256,
+            "n_pretrain_image": 4096,
             "n_image_channels": 3,
             "n_conv_filters": 64
         },
         "text": {
-            "n_pretrain_text": 256,
+            "n_pretrain_text": 4096,
             "n_embedding": 64,
             "n_gru_hidden": 128,
             "gru_bidirectional": false,
