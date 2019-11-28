@@ -122,7 +122,8 @@ class Witness(nn.Module):
             image_hid = self.image_fc(image_hid)
         else:
             assert image_emb is not None
-            image_hid = self.image_fc(image_emb)
+            batch_size = image.size(0)
+            image_hid = self.image_fc(image_emb.view(batch_size, -1))
 
         text_gru_h0 = self.image_to_gru(image_hid)
         text_gru_h0 = self.dropout1(text_gru_h0)
