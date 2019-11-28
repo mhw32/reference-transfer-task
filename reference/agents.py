@@ -261,7 +261,7 @@ class TrainAgent(BaseAgent):
             vocab_size = self.vocab_size,
             n_embedding = self.config.model.text.n_embedding,
             n_gru_hidden = self.config.model.text.n_gru_hidden,
-            gru_bidirectional = self.config.model.text.gru_bidirectional,
+            # gru_bidirectional = self.config.model.text.gru_bidirectional,
             n_gru_layers = self.config.model.text.n_gru_layers,
         ).to(self.device)
 
@@ -492,8 +492,8 @@ class EvaluateAgent(object):
         self.logger = logging.getLogger("Agent")
 
         self.checkpoint_dir = checkpoint_dir
-        self.checkpoint = torch.load(os.path.join(checkpoint_dir, checkpoint_name))
-        self.config = self.checkpoint.config
+        self.checkpoint = torch.load(os.path.join(checkpoint_dir, 'checkpoints', checkpoint_name))
+        self.config = self.checkpoint['config']
         self.agent = TrainAgent(self.config)
         self.agent.load_checkpoint(
             checkpoint_name, 
@@ -600,16 +600,17 @@ class EvaluateAgent(object):
                 if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.test_text_embeddings, self.agent.device)
 
-                logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
-                logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
-                logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
+                logit_a = self.agent.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
+                logit_b = self.agent.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
+                logit_c = self.agent.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
                 loss = F.cross_entropy(logits, label)
                 epoch_loss.update(loss.item(), batch_size)
 
-                pred = F.softmax(logits, dim=1).max(1)
+                pred = F.softmax(logits, dim=1)
+                _, pred = torch.max(pred, 1)
                 num_correct += torch.sum(pred == label).item()
                 num_total += batch_size
 
