@@ -9,7 +9,7 @@
     "data": {
         "data_size": null,
         "image_size": 64,
-        "context_condition": "far",
+        "context_condition": "all",
         "split_mode": "easy"
     },
     "train_image_from_scratch": true,
@@ -17,7 +17,7 @@
     "pretrain_image_embedding_dir": null,
     "pretrain_text_embedding_dir": null,
     "model": {
-        "n_bottleneck": 100,
+        "n_bottleneck": 128,
         "image": {
             "n_pretrain_image": 256,
             "n_image_channels": 3,
