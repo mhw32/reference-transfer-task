@@ -20,7 +20,6 @@ from reference.utils import save_checkpoint
 from reference.utils import AverageMeter
 from reference.setup import print_cuda_statistics
 from reference.datasets.chairs import ChairsInContext
-from reference.datasets.chair_dataset import Chairs_ReferenceGame
 from reference.models import Witness
 
 

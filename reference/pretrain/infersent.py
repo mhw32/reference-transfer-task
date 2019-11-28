@@ -9,7 +9,7 @@ import torch.nn as nn
 
 from reference.agents import FeatureAgent
 
-INFERSENT_PATH = '/mnt/fs5/wumike/reference/infersent/'
+INFERSENT_PATH = '/mnt/fs5/wumike/reference/infersent/infersent2.pkl'
 W2V_PATH = '/mnt/fs5/wumike/reference/fastText/crawl-300d-2M.vec'
 
 
@@ -275,11 +275,13 @@ if __name__ == "__main__":
     sentences = []
     print('Accumulating sentences to build vocabulary')
     for index in tqdm(range(train_len)):
-        text = train_dataset.__gettext__(index)
+        tokens = train_dataset.__gettext__(index)
+        text = ' '.join(tokens)
         sentences.append(text)
     infersent.build_vocab(sentences, tokenize=True)
 
     def extract(raw_text_list):
+        raw_text_list = [' '.join(raw_text) for raw_text in raw_text_list]
         features = infersent.encode(raw_text_list, tokenize=True)
         features = torch.from_numpy(features).float()
         return features

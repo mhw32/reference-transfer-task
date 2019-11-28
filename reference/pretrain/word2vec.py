@@ -3,7 +3,6 @@ import time
 import nltk
 import numpy as np
 from tqdm import tqdm
-from nltk import word_tokenize
 
 import torch
 import torch.nn as nn
@@ -32,9 +31,14 @@ if __name__ == "__main__":
     def extract(raw_text_list):
         batch_embs = []
         for raw_text in raw_text_list:
-            tokens = word_tokenize(raw_text)
-            embeddings = [word_vec[token] for token in tokens]
-            embeddings = np.stack(embeddings).mean(0)  # take mean
+            embeddings = []
+            for token in raw_text:
+                if token in word_vec:
+                    embeddings.append(word_vec[token])
+            if len(embeddings) == 0:
+                embeddings = np.zeros(300)  # some filler value
+            else:
+                embeddings = np.stack(embeddings).mean(0)  # take mean
             embeddings = torch.from_numpy(embeddings).float()
             batch_embs.append(embeddings)
         batch_embs = torch.stack(batch_embs)
