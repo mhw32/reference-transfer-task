@@ -675,9 +675,12 @@ class FeatureAgent(object):
         'vanilla.json',
     )
 
-    def __init__(self, image_transforms = None):
+    def __init__(self, gpu_device = None, image_transforms = None):
         with open(self.DEFAULT_CONFIG_FILE, 'r') as fp:
-            self.config = DotMap(json.load(fp))
+            self.config = json.load(fp)
+            if gpu_device is not None:
+                self.config['gpu_device'] = gpu_device
+        self.config = DotMap(self.config)
         self.image_transforms = image_transforms
         self._choose_device()
 
