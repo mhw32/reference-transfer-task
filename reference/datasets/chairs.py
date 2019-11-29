@@ -64,6 +64,7 @@ class ChairsInContext(data.Dataset):
         self.min_token_occ = min_token_occ
         self.max_sent_len = max_sent_len
         self.random_seed = random_seed
+        self.subset_indices = None
         
         if image_transform is None:
             self.image_transform = transforms.Compose([
@@ -120,6 +121,8 @@ class ChairsInContext(data.Dataset):
                 n_train_total = int(math.ceil(data_size * n_train_total))
                 indices = rs.choice(indices, size=n_train_total)
                 data = data[indices]
+
+                self.subset_indices = indices
 
         labels = self._process_labels(data)
 

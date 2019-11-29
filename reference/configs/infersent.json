@@ -1,5 +1,5 @@
 {
-    "exp_base": "/mnt/fs5/wumike/reference/trained_models/11_25/",
+    "exp_base": "/mnt/fs5/wumike/reference/trained_models/debug",
     "exp_name": "infersent",
     "cuda": true,
     "gpu_device": 2,
@@ -7,7 +7,7 @@
     "data_loader_workers": 8,
     "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
     "data": {
-        "data_size": null,
+        "data_size": 1.0,
         "image_size": 64,
         "context_condition": "all",
         "split_mode": "easy"

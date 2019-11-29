@@ -203,6 +203,14 @@ class TrainAgent(BaseAgent):
             self.val_chair_b_embeddings = np.load(val_chair_b_embedding_file)
             self.val_chair_c_embeddings = np.load(val_chair_c_embedding_file)
 
+            # if we have chosen a subset then, we need to properly subset these
+            if self.config.data.data_size is not None:
+                subset = self.train_dataset.subset_indices
+                assert subset is not None
+                self.train_chair_a_embeddings = self.train_chair_a_embeddings[subset]
+                self.train_chair_b_embeddings = self.train_chair_b_embeddings[subset]
+                self.train_chair_c_embeddings = self.train_chair_c_embeddings[subset]
+
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
             train_embedding_file = os.path.join(
@@ -216,6 +224,11 @@ class TrainAgent(BaseAgent):
 
             self.train_text_embeddings = np.load(train_embedding_file)
             self.val_text_embeddings = np.load(val_embedding_file)
+
+            if self.config.data.data_size is not None:
+                subset = self.train_dataset.subset_indices
+                assert subset is not None
+                self.train_text_embeddings = self.train_text_embeddings[subset]
 
     def _load_datasets(self):
         train_dataset = ChairsInContext(
@@ -233,7 +246,6 @@ class TrainAgent(BaseAgent):
         )
         val_dataset = ChairsInContext(
             self.config.data_dir,
-            data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',  # NOTE: do not bleed test in
@@ -547,7 +559,6 @@ class EvaluateAgent(object):
     def _load_datasets(self):
         test_dataset = ChairsInContext(
             self.config.data_dir,
-            data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = self.agent.train_dataset.vocab,
             split = 'test',
@@ -697,7 +708,6 @@ class FeatureAgent(object):
     def _load_datasets(self):
         train_dataset = ChairsInContext(
             self.config.data_dir,
-            data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = None,
             split = 'train', 
@@ -709,7 +719,6 @@ class FeatureAgent(object):
         )
         val_dataset = ChairsInContext(
             self.config.data_dir,
-            data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',
@@ -721,7 +730,6 @@ class FeatureAgent(object):
         )
         test_dataset = ChairsInContext(
             self.config.data_dir,
-            data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'test',
