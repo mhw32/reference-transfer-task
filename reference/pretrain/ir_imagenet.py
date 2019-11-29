@@ -9,6 +9,7 @@ from torchvision import transforms
 
 from reference.agents import FeatureAgent
 
+GPU_DEVICE = 2
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
 MODEL_DIR = "/mnt/fs5/wumike/localagg/trained_models/7_12/experiments/imagenet_ir/2019-11-03--10_48_44"
@@ -22,7 +23,7 @@ config_path = os.path.join(MODEL_DIR, 'config.json')
 checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
 assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
-config = process_config(config_path)
+config = process_config(config_path, override_dotmap={'gpu_device': GPU_DEVICE})
 AgentClass = globals()[config.agent]
 localagg = AgentClass(config)
 localagg.load_checkpoint(
