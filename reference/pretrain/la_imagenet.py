@@ -13,7 +13,7 @@ GPU_DEVICE = 2
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
 MODEL_DIR = "/mnt/fs5/wumike/localagg/trained_models/7_12/experiments/imagenet_la/2019-08-17--11_00_06"
-OUT_DIR = "/mnt/fs5/wumike/reference/pretrain/ir_imagenet"
+OUT_DIR = "/mnt/fs5/wumike/reference/pretrain/la_imagenet"
 
 sys.path.append(LOCALAGG_DIR)
 from src.agents.agents import *

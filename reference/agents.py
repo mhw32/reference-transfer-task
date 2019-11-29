@@ -675,13 +675,14 @@ class FeatureAgent(object):
         'vanilla.json',
     )
 
-    def __init__(self, gpu_device = None, image_transforms = None):
+    def __init__(self, override_vocab = None, gpu_device = None, image_transforms = None):
         with open(self.DEFAULT_CONFIG_FILE, 'r') as fp:
             self.config = json.load(fp)
             if gpu_device is not None:
                 self.config['gpu_device'] = gpu_device
         self.config = DotMap(self.config)
         self.image_transforms = image_transforms
+        self.override_vocab = override_vocab
         self._choose_device()
 
         self._load_datasets()
@@ -712,7 +713,7 @@ class FeatureAgent(object):
         train_dataset = ChairsInContext(
             self.config.data_dir,
             image_size = self.config.data.image_size,
-            vocab = None,
+            vocab = self.override_vocab,
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
@@ -748,7 +749,7 @@ class FeatureAgent(object):
 
     def extract_features(self, extract_fun, modality='image', split='train'):
         assert split in ['train', 'val', 'test']
-        assert modality in ['image', 'text']
+        assert modality in ['image', 'text', 'encoded_text']
 
         if split == 'train':
             dataset = self.train_dataset
@@ -764,7 +765,7 @@ class FeatureAgent(object):
 
         chair_embs_a, chair_embs_b, chair_embs_c, text_embs = [], [], [], []
 
-        for index, chair_a, chair_b, chair_c, text_seq, text_len, label in data_loader:
+        for index, chair_a, chair_b, chair_c, text_seq, text_len, _ in data_loader:
             chair_a = chair_a.to(self.device)
             chair_b = chair_b.to(self.device)
             chair_c = chair_c.to(self.device)
@@ -777,9 +778,13 @@ class FeatureAgent(object):
                 chair_embs_a.append(chair_emb_a)
                 chair_embs_b.append(chair_emb_b)
                 chair_embs_c.append(chair_emb_c)
-            else:
+            elif modality == 'text':
                 raw_text = [dataset.__gettext__(ix.item()) for ix in index]
                 text_emb = extract_fun(raw_text)
+
+                text_embs.append(text_emb)
+            elif modality == 'encoded_text':
+                text_emb = extract_fun(text_seq, text_len)
 
                 text_embs.append(text_emb)
         
