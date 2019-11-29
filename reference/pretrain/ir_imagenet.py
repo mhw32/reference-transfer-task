@@ -18,7 +18,7 @@ sys.path.append(LOCALAGG_DIR)
 from src.agents.agents import *
 from src.utils.setup import process_config
 
-config_path = os.path.join(LOCALAGG_DIR, 'config.json')
+config_path = os.path.join(MODEL_DIR, 'config.json')
 checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
 assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
@@ -32,6 +32,7 @@ localagg.load_checkpoint(
     load_model = True,
 )
 localagg._set_models_to_eval()
+gpu_device = localagg.config.gpu_device[0]
 resnet = copy.deepcopy(localagg.model)
 resnet.load_state_dict(localagg.model.state_dict())
 resnet = nn.Sequential(*list(resnet.children())[:-2])
@@ -51,7 +52,10 @@ if __name__ == "__main__":
         ),
     ])
 
-    agent = FeatureAgent(image_transforms = image_transforms)
+    agent = FeatureAgent(
+        image_transforms = image_transforms,
+        gpu_device = gpu_device,
+    )
     
     def extract(chair):
         with torch.no_grad():
