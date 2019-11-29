@@ -163,8 +163,10 @@ class BaseAgent(object):
 class TrainAgent(BaseAgent):
     """Agent class to train reference game witness functions."""
    
-    def __init__(self, config):
+    def __init__(self, config, override_vocab = None):
         super().__init__(config)
+
+        self.override_vocab = vocab
 
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
@@ -221,7 +223,7 @@ class TrainAgent(BaseAgent):
             self.config.data_dir,
             data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
-            vocab = None,
+            vocab = self.override_vocab,
             split = 'train', 
             context_condition = self.config.data.context_condition,
             split_mode = self.config.data.split_mode, 
@@ -438,6 +440,10 @@ class TrainAgent(BaseAgent):
             'val_iteration': self.current_val_iteration,
             'val_loss': self.current_val_loss,
             'config': self.config,
+            'vocab': self.train_dataset.vocab,
+            'train_losses': self.train_losses,
+            'val_losses': self.val_losses,
+            'val_accs': self.val_accs,
         }
         is_best = ((self.current_val_loss == self.best_val_loss) or
                    not self.config.validate)
@@ -494,7 +500,7 @@ class EvaluateAgent(object):
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint = torch.load(os.path.join(checkpoint_dir, 'checkpoints', checkpoint_name))
         self.config = self.checkpoint['config']
-        self.agent = TrainAgent(self.config)
+        self.agent = TrainAgent(self.config, override_vocab = self.checkpoint['vocab'])
         self.agent.load_checkpoint(
             checkpoint_name, 
             checkpoint_dir = checkpoint_dir, 
