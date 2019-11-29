@@ -12,6 +12,7 @@ from reference.setup import process_config
 from reference.setup import load_json
 
 DATA_SIZES = [0.005, 0.01, 0.05, 0.1, 0.25, 0.5]
+DATA_SIZES = DATA_SIZES[::-1]
 
 
 def run(config_path, data_size):

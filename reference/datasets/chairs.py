@@ -113,7 +113,7 @@ class ChairsInContext(data.Dataset):
         if self.split == 'train':
             if data_size is not None:
                 n_train_total = len(data)
-                indices = np.random.choice(np.arange(n_train_total))
+                indices = np.arange(n_train_total)
                 n_train_total = int(math.ceil(data_size * n_train_total))
                 indices = np.random.choice(indices, size=n_train_total)
                 data = data[indices]
