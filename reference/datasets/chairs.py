@@ -38,6 +38,7 @@ class ChairsInContext(data.Dataset):
             image_transform = None,
             min_token_occ = 2,
             max_sent_len = 33,
+            random_seed = 42,
         ):
 
         super().__init__()
@@ -62,6 +63,7 @@ class ChairsInContext(data.Dataset):
         self.val_frac = val_frac
         self.min_token_occ = min_token_occ
         self.max_sent_len = max_sent_len
+        self.random_seed = random_seed
         
         if image_transform is None:
             self.image_transform = transforms.Compose([
@@ -112,10 +114,11 @@ class ChairsInContext(data.Dataset):
 
         if self.split == 'train':
             if data_size is not None:
+                rs = np.random.RandomState(self.random_seed)
                 n_train_total = len(data)
                 indices = np.arange(n_train_total)
                 n_train_total = int(math.ceil(data_size * n_train_total))
-                indices = np.random.choice(indices, size=n_train_total)
+                indices = rs.choice(indices, size=n_train_total)
                 data = data[indices]
 
         labels = self._process_labels(data)

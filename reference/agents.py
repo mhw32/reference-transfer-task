@@ -230,6 +230,7 @@ class TrainAgent(BaseAgent):
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = None,
+            random_seed = self.config.seed,
         )
         val_dataset = ChairsInContext(
             self.config.data_dir,
@@ -242,6 +243,7 @@ class TrainAgent(BaseAgent):
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = None,
+            random_seed = self.config.seed,
         )
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -555,6 +557,7 @@ class EvaluateAgent(object):
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = None,
+            random_seed = self.config.seed,
         )
         self.test_dataset = test_dataset
         self.vocab = self.agent.train_dataset.vocab
