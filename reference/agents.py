@@ -164,9 +164,8 @@ class TrainAgent(BaseAgent):
     """Agent class to train reference game witness functions."""
    
     def __init__(self, config, override_vocab = None):
+        self.override_vocab = override_vocab
         super().__init__(config)
-
-        self.override_vocab = vocab
 
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
