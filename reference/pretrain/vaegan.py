@@ -55,7 +55,7 @@ if __name__ == "__main__":
     def extract_img(chair):
         with torch.no_grad():
             chair = chair.to(mvae.device)
-            z_mu, _ = mvae.model_dicts[0]['gan_inf'](chair)
+            z_mu, _ = mvae.model_dicts[1]['gan_inf'](chair)
             return z_mu.cpu()
 
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
