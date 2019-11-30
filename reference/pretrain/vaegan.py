@@ -83,7 +83,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             text_seq = text_seq.to(mvae.device)
             text_len = text_len.to(mvae.device)
-            z_mu, _ = mvae.model_dicts[0]['vae_inf'](text_seq, text_len)
+            z_mu, _ = mvae.model_dicts[1]['vae_inf'](text_seq, text_len)
             return z_mu.cpu()
 
     train_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='train')
