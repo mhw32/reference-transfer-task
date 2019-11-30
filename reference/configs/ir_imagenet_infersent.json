@@ -1,0 +1,45 @@
+{
+    "exp_base": "/mnt/fs5/wumike/reference/trained_models/11_25/",
+    "exp_name": "ir_imagenet_infersent",
+    "cuda": true,
+    "gpu_device": 0,
+    "seed": 42,
+    "data_loader_workers": 8,
+    "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
+    "data": {
+        "data_size": null,
+        "image_size": 64,
+        "context_condition": "all",
+        "split_mode": "easy"
+    },
+    "train_image_from_scratch": false,
+    "train_text_from_scratch": false,
+    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/ir_imagenet",
+    "pretrain_text_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/infersent",
+    "model": {
+        "n_bottleneck": 128,
+        "image": {
+            "n_pretrain_image": 128,
+            "n_image_channels": 3,
+            "n_conv_filters": 64
+        },
+        "text": {
+            "n_pretrain_text": 4096,
+            "n_embedding": 64,
+            "n_gru_hidden": 128,
+            "gru_bidirectional": false,
+            "n_gru_layers": 1
+        }
+    },
+    "optim": {
+        "optimizer": "Adam",
+        "val_freq": 1,
+        "auto_schedule": true,
+        "batch_size": 128, 
+        "learning_rate": 0.0005,
+        "momentum": 0.9,
+        "weight_decay": 0,
+        "patience": 10,
+        "epochs": 100
+    }
+}
