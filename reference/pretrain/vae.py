@@ -3,13 +3,14 @@ import sys
 import copy
 import numpy as np
 from tqdm import tqdm
+from dotmap import DotMap
 import torch
 import torch.nn as nn
 from torchvision import transforms
 
 from reference.agents import FeatureAgent
 
-GPU_DEVICE = 2
+GPU_DEVICE = 1
 CUR_DIR = os.path.dirname(__file__)
 MVAE_DIR = os.path.realpath(os.path.join(CUR_DIR, '../mvae'))
 MODEL_DIR = "/mnt/fs5/wumike/hybrid/trained_models/8_22/longtests/experiments/TrainAgent_coco_vae_seed1337/2019-08-22--11_31_53"
@@ -17,18 +18,21 @@ OUT_DIR = "/mnt/fs5/wumike/reference/pretrain/vae"
 
 sys.path.append(MVAE_DIR)
 from src.agents.agents import *
-from src.utils.setup import process_config
+from src.utils.utils import load_json
 
 config_path = os.path.join(MODEL_DIR, 'config.json')
 checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
 assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
-config = process_config(config_path, override_dotmap={'gpu_device': GPU_DEVICE})
+config = load_json(config_path)
+config['gpu_device'] = GPU_DEVICE
+config = DotMap(config)
+
 AgentClass = globals()[config.agent]
 mvae = AgentClass(config)
 mvae.load_checkpoint('model_best.pth.tar')
 mvae._set_models_to_eval()
-gpu_device = mvae.config.gpu_device[0]
+gpu_device = mvae.config.gpu_device
 
 
 if __name__ == "__main__":

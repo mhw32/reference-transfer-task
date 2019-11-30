@@ -3,6 +3,7 @@ import sys
 import copy
 import numpy as np
 from tqdm import tqdm
+from dotmap import DotMap
 import torch
 import torch.nn as nn
 from torchvision import transforms
@@ -18,13 +19,16 @@ OUT_TXT_DIR = "/mnt/fs5/wumike/reference/pretrain/vaegan_text"
 
 sys.path.append(MVAE_DIR)
 from src.agents.agents import *
-from src.utils.setup import process_config
+from src.utils.utils import load_json
 
 config_path = os.path.join(MODEL_DIR, 'config.json')
 checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
 assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
-config = process_config(config_path, override_dotmap={'gpu_device': GPU_DEVICE})
+config = load_json(config_path)
+config['gpu_device'] = GPU_DEVICE
+config = DotMap(config)
+
 AgentClass = globals()[config.agent]
 mvae = AgentClass(config)
 mvae.load_checkpoint('model_best.pth.tar')
