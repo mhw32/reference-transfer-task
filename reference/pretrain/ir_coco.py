@@ -37,7 +37,7 @@ localagg._set_models_to_eval()
 gpu_device = localagg.config.gpu_device[0]
 resnet = copy.deepcopy(localagg.img_model)
 resnet.load_state_dict(localagg.img_model.state_dict())
-resnet = nn.Sequential(*list(resnet.children())[:-2])
+# resnet = nn.Sequential(*list(resnet.children())[:-2])
 resnet = resnet.eval()
 for param in resnet.parameters():
     param.requires_grad = False
