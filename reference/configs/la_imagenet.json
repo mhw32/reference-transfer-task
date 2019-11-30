@@ -19,7 +19,7 @@
     "model": {
         "n_bottleneck": 128,
         "image": {
-            "n_pretrain_image": 2048,
+            "n_pretrain_image": 128,
             "n_image_channels": 3,
             "n_conv_filters": 64
         },
