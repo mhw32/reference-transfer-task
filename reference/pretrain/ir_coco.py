@@ -73,7 +73,7 @@ if __name__ == "__main__":
             batch_size = chair.size(0)
             chair = chair.to(localagg.device)
             return resnet(chair).view(batch_size, -1).cpu()
-   
+  
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
         extract_img, modality='image', split='train')
 
@@ -99,6 +99,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             text_seq = text_seq.to(localagg.device)
             text_len = text_len.to(localagg.device)
+            text_len = text_len.unsqueeze(1)
             return rnn(text_seq, text_len).cpu()
     
     train_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='train')
