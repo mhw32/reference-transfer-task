@@ -10,7 +10,7 @@ from torchvision import transforms
 
 from reference.agents import FeatureAgent
 
-GPU_DEVICE = 2
+GPU_DEVICE = 4
 CUR_DIR = os.path.dirname(__file__)
 MVAE_DIR = os.path.realpath(os.path.join(CUR_DIR, '../mvae'))
 MODEL_DIR = "/mnt/fs5/wumike/hybrid/trained_models/8_22/longtests/experiments/TrainAgent_coco_vaevae_seed1337/2019-08-22--11_31_20"
@@ -33,7 +33,7 @@ AgentClass = globals()[config.agent]
 mvae = AgentClass(config)
 mvae.load_checkpoint('model_best.pth.tar')
 mvae._set_models_to_eval()
-gpu_device = mvae.config.gpu_device[0]
+gpu_device = mvae.config.gpu_device
 
 override_vocab = copy.deepcopy(mvae.train_dataset.vocab)
 
