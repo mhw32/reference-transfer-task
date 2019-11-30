@@ -62,7 +62,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             batch_size = chair.size(0)
             chair = chair.to(localagg.device)
-            return resnet(chair).view(batch_size, -1)
+            return resnet(chair).view(batch_size, -1).cpu()
     
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
         extract, modality='image', split='train')

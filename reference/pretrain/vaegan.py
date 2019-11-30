@@ -52,7 +52,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             chair = chair.to(mvae.device)
             z_mu, _ = mvae.model_dicts[0]['gan_inf'](chair)
-            return z_mu
+            return z_mu.cpu()
 
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
         extract_img, modality='image', split='train')
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             text_seq = text_seq.to(mvae.device)
             text_len = text_len.to(mvae.device)
             z_mu, _ = mvae.model_dicts[0]['vae_inf'](text_seq, text_len)
-            return z_mu
+            return z_mu.cpu()
 
     train_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='train')
     val_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='val')

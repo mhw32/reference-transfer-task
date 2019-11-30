@@ -9,7 +9,7 @@ from torchvision import transforms
 
 from reference.agents import FeatureAgent
 
-GPU_DEVICE = 2
+GPU_DEVICE = 0
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
 MODEL_DIR = "/mnt/fs5/wumike/localagg/trained_models/10_11/experiments/coco_composite_lrdrop2/2019-10-27--10_37_43"
@@ -72,8 +72,8 @@ if __name__ == "__main__":
         with torch.no_grad():
             batch_size = chair.size(0)
             chair = chair.to(localagg.device)
-            return resnet(chair).view(batch_size, -1)
-    
+            return resnet(chair).view(batch_size, -1).cpu()
+   
     train_chair_a, train_chair_b, train_chair_c = agent.extract_features(
         extract_img, modality='image', split='train')
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             text_seq = text_seq.to(localagg.device)
             text_len = text_len.to(localagg.device)
-            return rnn(text_seq, text_len)
+            return rnn(text_seq, text_len).cpu()
     
     train_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='train')
     val_text_embs = agent.extract_features(extract_txt, modality='encoded_text', split='val')
