@@ -1,14 +1,28 @@
-Image       Text        Test Acc.
----------------------------------
-Vanilla     Vanilla     0.721
-Vanilla     Word2Vec    0.715
-Vanilla     RoBERTa     0.707
-Vanilla     InferSent   0.740
-VGG19       Vanilla     0.673
-VGG19       Word2Vec    0.692
-VGG19       RoBERTa     0.345
-VGG19       InferSent   0.686
-ResNet32    Vanilla     0.714
-ResNet32    Word2Vec    0.719
-ResNet32    RoBERTa     0.649
-ResNet32    InferSent   0.722
+Image           Text            Test Acc.
+-----------------------------------------
+Scratch         Scratch         0.721
+Scratch         Word2Vec        0.715
+Scratch         RoBERTa         0.707
+Scratch         InferSent       0.740
+VGG19           Scratch         0.673
+VGG19           Word2Vec        0.692
+VGG19           RoBERTa         0.345
+VGG19           InferSent       0.686
+ResNet32        Scratch         0.714
+ResNet32        Word2Vec        0.719
+ResNet32        RoBERTa         0.649
+ResNet32        InferSent       0.722
+-----------------------------------------
+VAE (COCO)      Scratch         0.652
+VAE (COCO)      RoBERTa         0.696
+VAE (COCO)      InferSent       0.698
+VAEVAE (COCO)   VAEVAE (COCO)   0.665
+VAEGAN (COCO)   VAEGAN (COCO)   0.680
+-----------------------------------------
+IR (ImageNet)   Scratch         0.705
+IR (ImageNet)   RoBERTa         0.724
+IR (ImageNet)   InferSent       0.731
+LA (ImageNet)   Scratch         0.715
+LA (ImageNet)   RoBERTa         0.719
+LA (ImageNet)   InferSent       0.734
+MIR (COCO)      MIR (COCO)      0.695
