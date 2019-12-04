@@ -4,3 +4,6 @@
 [submodule "reference/mvae"]
 	path = reference/mvae
 	url = https://github.com/mhw32/multimodal-family
+[submodule "reference/datasets/refer"]
+	path = reference/datasets/refer
+	url = https://github.com/lichengunc/refer
