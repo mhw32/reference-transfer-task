@@ -837,6 +837,7 @@ def extract_image_embeddings(
         device,
     ):
     image_emb_a, image_emb_b, image_emb_c = [], [], []
+    
     for ix in index:
         image_a_ix = image_a_embeddings[ix.item()]
         image_b_ix = image_b_embeddings[ix.item()] 
@@ -844,9 +845,11 @@ def extract_image_embeddings(
         image_emb_a.append(image_a_ix)
         image_emb_b.append(image_b_ix)
         image_emb_c.append(image_c_ix)
+    
     image_emb_a = torch.from_numpy(np.stack(image_emb_a)).to(device)
     image_emb_b = torch.from_numpy(np.stack(image_emb_b)).to(device)
     image_emb_c = torch.from_numpy(np.stack(image_emb_c)).to(device)
+    
     return image_emb_a, image_emb_b, image_emb_c
 
 

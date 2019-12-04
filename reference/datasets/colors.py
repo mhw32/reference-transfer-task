@@ -32,13 +32,13 @@ class ColorsInContext(data.Dataset):
             vocab = None, 
             split = 'train', 
             context_condition = 'all',
-            split_mode = None, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = None,
             min_token_occ = 2,
             max_sent_len = 33,
             random_seed = 42,
+            **kwargs
         ):
 
         super().__init__()
