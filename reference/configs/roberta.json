@@ -5,7 +5,8 @@
     "gpu_device": 2,
     "seed": 42,
     "data_loader_workers": 8,
-    "data_dir": "/mnt/fs5/wumike/datasets/chairs_in_context",
+    "dataset": "chairs_in_context",
+    "data_dir": "/mnt/fs5/wumike/datasets",
     "data": {
         "data_size": null,
         "image_size": 64,

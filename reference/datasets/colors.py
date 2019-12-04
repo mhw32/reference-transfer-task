@@ -32,6 +32,7 @@ class ColorsInContext(data.Dataset):
             vocab = None, 
             split = 'train', 
             context_condition = 'all',
+            split_mode = None, 
             train_frac = 0.64,
             val_frac = 0.16,
             image_transform = None,

@@ -20,6 +20,7 @@ from reference.utils import save_checkpoint
 from reference.utils import AverageMeter
 from reference.setup import print_cuda_statistics
 from reference.datasets.chairs import ChairsInContext
+from reference.datasets.colors import ColorsInContext
 from reference.models import Witness
 
 
@@ -231,6 +232,7 @@ class TrainAgent(BaseAgent):
                 self.train_text_embeddings = self.train_text_embeddings[subset]
 
     def _load_datasets(self):
+        
         train_dataset = ChairsInContext(
             self.config.data_dir,
             data_size = self.config.data.data_size,
@@ -710,7 +712,14 @@ class FeatureAgent(object):
         return loader, dataset_size
 
     def _load_datasets(self):
-        train_dataset = ChairsInContext(
+        if self.config.dataset == 'chairs_in_context':
+            DatasetClass = ChairsInContext
+        elif self.config.dataset == 'colors_in_context':
+            DatasetClass = ColorsInContext
+        else:
+            raise Exception(f'Dataset {self.config.dataset} not supported.')
+        
+        train_dataset = DatasetClass(
             self.config.data_dir,
             image_size = self.config.data.image_size,
             vocab = self.override_vocab,
@@ -721,7 +730,7 @@ class FeatureAgent(object):
             val_frac = 0.10,
             image_transform = self.image_transforms,
         )
-        val_dataset = ChairsInContext(
+        val_dataset = DatasetClass(
             self.config.data_dir,
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
@@ -732,7 +741,7 @@ class FeatureAgent(object):
             val_frac = 0.10,
             image_transform = self.image_transforms,
         )
-        test_dataset = ChairsInContext(
+        test_dataset = DatasetClass(
             self.config.data_dir,
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
