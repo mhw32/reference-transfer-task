@@ -121,7 +121,12 @@ class CocoInContext(data.Dataset):
         #   [[mask_a, mask_b, ...], ...]
         #   [[text_a, text_b, ...], ...]
         #   [label, ...]
-        images, masks, texts, labels = self._unroll_data(images, masks, texts)
+        images, masks, texts, labels = self._unroll_data(
+            images, 
+            masks, ,
+            texts,
+            min_num_obj=3,  # ignore images with < 3 objects
+        )
 
         # convert raw tokens -> vector of vocabulary indices
         text_seqs, text_lens, text_raws = self._process_text(texts)
@@ -135,7 +140,7 @@ class CocoInContext(data.Dataset):
         self.text_raws = text_raws
         self.size = len(images)
 
-    def _unroll_data(self, images, masks, texts):
+    def _unroll_data(self, images, masks, texts, min_num_obj=3):
         assert len(images) == len(masks)
         assert len(images) == len(texts)
 
@@ -148,6 +153,11 @@ class CocoInContext(data.Dataset):
             image, mask, text = images[i], masks[i], texts[i]
             assert len(mask) == len(text)
             
+            if len(mask) < min_num_obj:
+                continue
+
+            # TODO: what to do about > 3 objects?
+
             for j in range(len(mask)):
                 mask_j = copy.deepcopy(mask)
                 text_j = text[j]
@@ -227,7 +237,12 @@ class CocoInContext(data.Dataset):
         image = Image.open(os.path.join(self.data_dir, image))
 
         if self.image_transform is None:
-            image = transforms.ToTensor()(image)
+            image_transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.Resize(self.image_size),
+                transforms.ToTensor(),
+            ])
+            image = image_transform(image)
         else:
             image = self.image_transform(image)
 
