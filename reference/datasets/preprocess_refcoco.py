@@ -2,6 +2,7 @@
 
 import os
 import sys
+import pickle
 
 refer_dir = os.path.join(os.path.dirname(__file__), 'refer')
 sys.path.append(refer_dir)
@@ -37,7 +38,7 @@ def process_dataset(refer, split):
             sents = []
             for ref in refs:
                 # just take the first sentence
-                sent = ref['sentences'][0]jh,
+                sent = ref['sentences'][0]
                 sents.append(sent['tokens'])
             ref_sents.append(sents)
         return ref_sents
