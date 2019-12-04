@@ -1,4 +1,5 @@
 import os
+import sys
 import math
 import json
 import pickle
@@ -21,6 +22,8 @@ from reference.text_utils import (
     UNK_TOKEN,
 )
 from reference.utils import OrderedCounter
+
+sys.path.append(os.path.dirname(__file__))
 from refer import REFER
 
 
@@ -82,6 +85,7 @@ class RefCOCOInContext(data.Dataset):
         self.img_texts = self.get_text(self.img_refs)
 
         self.flat_img_ids = []
+        self.flat_img_ctxs = []
         self.flat_img_refs = []
         self.flat_img_masks = []
         self.flat_img_texts = []
@@ -92,8 +96,10 @@ class RefCOCOInContext(data.Dataset):
             img_texts = self.img_texts[i]
             img_id = self.img_ids[i]
 
-            assert len(img_refs) == len(img_masks))
-            assert len(img_refs) == len(img_texts))
+            assert len(img_refs) == len(img_masks)
+            assert len(img_refs) == len(img_texts)
+
+            img_ctxs = []
 
             self.flat_img_refs.extend(img_refs)
             self.flat_img_masks.extend(img_masks)
