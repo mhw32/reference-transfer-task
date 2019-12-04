@@ -170,47 +170,47 @@ class TrainAgent(BaseAgent):
 
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
-            train_chair_a_embedding_file = os.path.join(
+            train_image_a_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir, 
-                'train_chair_a.npy',
+                'train_image_a.npy',
             )
-            train_chair_b_embedding_file = os.path.join(
+            train_image_b_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir, 
-                'train_chair_b.npy',
+                'train_image_b.npy',
             )
-            train_chair_c_embedding_file = os.path.join(
+            train_image_c_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'train_chair_c.npy',
+                'train_image_c.npy',
             )
 
-            val_chair_a_embedding_file = os.path.join(
+            val_image_a_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'val_chair_a.npy',
+                'val_image_a.npy',
             )
-            val_chair_b_embedding_file = os.path.join(
+            val_image_b_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'val_chair_b.npy',
+                'val_image_b.npy',
             )
-            val_chair_c_embedding_file = os.path.join(
+            val_image_c_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'val_chair_c.npy',
+                'val_image_c.npy',
             )
             
-            self.train_chair_a_embeddings = np.load(train_chair_a_embedding_file)
-            self.train_chair_b_embeddings = np.load(train_chair_b_embedding_file)
-            self.train_chair_c_embeddings = np.load(train_chair_c_embedding_file)
+            self.train_image_a_embeddings = np.load(train_image_a_embedding_file)
+            self.train_image_b_embeddings = np.load(train_image_b_embedding_file)
+            self.train_image_c_embeddings = np.load(train_image_c_embedding_file)
 
-            self.val_chair_a_embeddings = np.load(val_chair_a_embedding_file)
-            self.val_chair_b_embeddings = np.load(val_chair_b_embedding_file)
-            self.val_chair_c_embeddings = np.load(val_chair_c_embedding_file)
+            self.val_image_a_embeddings = np.load(val_image_a_embedding_file)
+            self.val_image_b_embeddings = np.load(val_image_b_embedding_file)
+            self.val_image_c_embeddings = np.load(val_image_c_embedding_file)
 
             # if we have chosen a subset then, we need to properly subset these
             if self.config.data.data_size is not None:
                 subset = self.train_dataset.subset_indices
                 assert subset is not None
-                self.train_chair_a_embeddings = self.train_chair_a_embeddings[subset]
-                self.train_chair_b_embeddings = self.train_chair_b_embeddings[subset]
-                self.train_chair_c_embeddings = self.train_chair_c_embeddings[subset]
+                self.train_image_a_embeddings = self.train_image_a_embeddings[subset]
+                self.train_image_b_embeddings = self.train_image_b_embeddings[subset]
+                self.train_image_c_embeddings = self.train_image_c_embeddings[subset]
 
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
@@ -232,9 +232,16 @@ class TrainAgent(BaseAgent):
                 self.train_text_embeddings = self.train_text_embeddings[subset]
 
     def _load_datasets(self):
+
+        if self.config.dataset == 'chairs_in_context':
+            DatasetClass = ChairsInContext
+        elif self.config.dataset == 'colors_in_context':
+            DatasetClass = ColorsInContext
+        else:
+            raise Exception(f'Dataset {self.config.dataset} not supported.')
         
-        train_dataset = ChairsInContext(
-            self.config.data_dir,
+        train_dataset = DatasetClass(
+            os.path.join(self.config.data_dir, self.config.dataset),
             data_size = self.config.data.data_size,
             image_size = self.config.data.image_size,
             vocab = self.override_vocab,
@@ -246,8 +253,8 @@ class TrainAgent(BaseAgent):
             image_transform = None,
             random_seed = self.config.seed,
         )
-        val_dataset = ChairsInContext(
-            self.config.data_dir,
+        val_dataset = DatasetClass(
+            os.path.join(self.config.data_dir, self.config.dataset),
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',  # NOTE: do not bleed test in
@@ -329,23 +336,23 @@ class TrainAgent(BaseAgent):
         self.model.train()
         epoch_loss = AverageMeter()
 
-        for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.train_loader:
-            batch_size = chair_a.size(0)
+        for index, image_a, image_b, image_c, text_seq, text_len, label in self.train_loader:
+            batch_size = image_a.size(0)
 
-            chair_a = chair_a.to(self.device)
-            chair_b = chair_b.to(self.device)
-            chair_c = chair_c.to(self.device)
+            image_a = image_a.to(self.device)
+            image_b = image_b.to(self.device)
+            image_c = image_c.to(self.device)
             text_seq = text_seq.to(self.device)
             text_len = text_len.to(self.device)
             label = label.to(self.device)
 
-            chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+            image_emb_a, image_emb_b, image_emb_c = None, None, None
             if not self.config.train_image_from_scratch:
-                chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                image_emb_a, image_emb_b, image_emb_c = extract_image_embeddings(
                     index, 
-                    self.train_chair_a_embeddings,
-                    self.train_chair_b_embeddings,
-                    self.train_chair_c_embeddings,
+                    self.train_image_a_embeddings,
+                    self.train_image_b_embeddings,
+                    self.train_image_c_embeddings,
                     self.device,
                 )
 
@@ -353,9 +360,9 @@ class TrainAgent(BaseAgent):
             if not self.config.train_text_from_scratch:
                 text_emb = extract_text_embeddings(index, self.train_text_embeddings, self.device)
 
-            logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
-            logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
-            logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
+            logit_a = self.model(image_a, text_seq, text_len, image_emb = image_emb_a, text_emb = text_emb)
+            logit_b = self.model(image_b, text_seq, text_len, image_emb = image_emb_b, text_emb = text_emb)
+            logit_c = self.model(image_c, text_seq, text_len, image_emb = image_emb_c, text_emb = text_emb)
 
             logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -387,23 +394,23 @@ class TrainAgent(BaseAgent):
         num_total = 0.
 
         with torch.no_grad():
-            for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.val_loader:
-                batch_size = chair_a.size(0)
+            for index, image_a, image_b, image_c, text_seq, text_len, label in self.val_loader:
+                batch_size = image_a.size(0)
 
-                chair_a = chair_a.to(self.device)
-                chair_b = chair_b.to(self.device)
-                chair_c = chair_c.to(self.device)
+                image_a = image_a.to(self.device)
+                image_b = image_b.to(self.device)
+                image_c = image_c.to(self.device)
                 text_seq = text_seq.to(self.device)
                 text_len = text_len.to(self.device)
                 label = label.to(self.device)
 
-                chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+                image_emb_a, image_emb_b, image_emb_c = None, None, None
                 if not self.config.train_image_from_scratch:
-                    chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                    image_emb_a, image_emb_b, image_emb_c = extract_image_embeddings(
                         index, 
-                        self.val_chair_a_embeddings,
-                        self.val_chair_b_embeddings,
-                        self.val_chair_c_embeddings,
+                        self.val_image_a_embeddings,
+                        self.val_image_b_embeddings,
+                        self.val_image_c_embeddings,
                         self.device,
                     )
 
@@ -411,9 +418,9 @@ class TrainAgent(BaseAgent):
                 if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.val_text_embeddings, self.device)
 
-                logit_a = self.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
-                logit_b = self.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
-                logit_c = self.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
+                logit_a = self.model(image_a, text_seq, text_len, image_emb = image_emb_a, text_emb = text_emb)
+                logit_b = self.model(image_b, text_seq, text_len, image_emb = image_emb_b, text_emb = text_emb)
+                logit_c = self.model(image_c, text_seq, text_len, image_emb = image_emb_c, text_emb = text_emb)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -532,22 +539,22 @@ class EvaluateAgent(object):
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
             
-            test_chair_a_embedding_file = os.path.join(
+            test_image_a_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'test_chair_a.npy',
+                'test_image_a.npy',
             )
-            test_chair_b_embedding_file = os.path.join(
+            test_image_b_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'test_chair_b.npy',
+                'test_image_b.npy',
             )
-            test_chair_c_embedding_file = os.path.join(
+            test_image_c_embedding_file = os.path.join(
                 self.config.pretrain_image_embedding_dir,
-                'test_chair_c.npy',
+                'test_image_c.npy',
             ) 
             
-            self.test_chair_a_embeddings = np.load(test_chair_a_embedding_file)
-            self.test_chair_b_embeddings = np.load(test_chair_b_embedding_file)
-            self.test_chair_c_embeddings = np.load(test_chair_c_embedding_file)
+            self.test_image_a_embeddings = np.load(test_image_a_embedding_file)
+            self.test_image_b_embeddings = np.load(test_image_b_embedding_file)
+            self.test_image_c_embeddings = np.load(test_image_c_embedding_file)
 
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
@@ -559,8 +566,16 @@ class EvaluateAgent(object):
             self.test_text_embeddings = np.load(test_embedding_file)
 
     def _load_datasets(self):
-        test_dataset = ChairsInContext(
-            self.config.data_dir,
+
+        if self.config.dataset == 'chairs_in_context':
+            DatasetClass = ChairsInContext
+        elif self.config.dataset == 'colors_in_context':
+            DatasetClass = ColorsInContext
+        else:
+            raise Exception(f'Dataset {self.config.dataset} not supported.')
+
+        test_dataset = DatasetClass(
+            os.path.join(self.config.data_dir, self.config.dataset),
             image_size = self.config.data.image_size,
             vocab = self.agent.train_dataset.vocab,
             split = 'test',
@@ -597,23 +612,23 @@ class EvaluateAgent(object):
         num_total = 0.
 
         with torch.no_grad():
-            for index, chair_a, chair_b, chair_c, text_seq, text_len, label in self.test_loader:
-                batch_size = chair_a.size(0)
+            for index, image_a, image_b, image_c, text_seq, text_len, label in self.test_loader:
+                batch_size = image_a.size(0)
 
-                chair_a = chair_a.to(self.agent.device)
-                chair_b = chair_b.to(self.agent.device)
-                chair_c = chair_c.to(self.agent.device)
+                image_a = image_a.to(self.agent.device)
+                image_b = image_b.to(self.agent.device)
+                image_c = image_c.to(self.agent.device)
                 text_seq = text_seq.to(self.agent.device)
                 text_len = text_len.to(self.agent.device)
                 label = label.to(self.agent.device)
 
-                chair_emb_a, chair_emb_b, chair_emb_c = None, None, None
+                image_emb_a, image_emb_b, image_emb_c = None, None, None
                 if not self.config.train_image_from_scratch:
-                    chair_emb_a, chair_emb_b, chair_emb_c = extract_chair_embeddings(
+                    image_emb_a, image_emb_b, image_emb_c = extract_image_embeddings(
                         index, 
-                        self.test_chair_a_embeddings,
-                        self.test_chair_b_embeddings,
-                        self.test_chair_c_embeddings,
+                        self.test_image_a_embeddings,
+                        self.test_image_b_embeddings,
+                        self.test_image_c_embeddings,
                         self.agent.device,
                     )
 
@@ -621,9 +636,9 @@ class EvaluateAgent(object):
                 if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.test_text_embeddings, self.agent.device)
 
-                logit_a = self.agent.model(chair_a, text_seq, text_len, image_emb = chair_emb_a, text_emb = text_emb)
-                logit_b = self.agent.model(chair_b, text_seq, text_len, image_emb = chair_emb_b, text_emb = text_emb)
-                logit_c = self.agent.model(chair_c, text_seq, text_len, image_emb = chair_emb_c, text_emb = text_emb)
+                logit_a = self.agent.model(image_a, text_seq, text_len, image_emb = image_emb_a, text_emb = text_emb)
+                logit_b = self.agent.model(image_b, text_seq, text_len, image_emb = image_emb_b, text_emb = text_emb)
+                logit_c = self.agent.model(image_c, text_seq, text_len, image_emb = image_emb_c, text_emb = text_emb)
 
                 logits = torch.cat([logit_a, logit_b, logit_c], dim=1)
 
@@ -712,6 +727,7 @@ class FeatureAgent(object):
         return loader, dataset_size
 
     def _load_datasets(self):
+
         if self.config.dataset == 'chairs_in_context':
             DatasetClass = ChairsInContext
         elif self.config.dataset == 'colors_in_context':
@@ -720,7 +736,7 @@ class FeatureAgent(object):
             raise Exception(f'Dataset {self.config.dataset} not supported.')
         
         train_dataset = DatasetClass(
-            self.config.data_dir,
+            os.path.join(self.config.data_dir, self.config.dataset),
             image_size = self.config.data.image_size,
             vocab = self.override_vocab,
             split = 'train', 
@@ -731,7 +747,7 @@ class FeatureAgent(object):
             image_transform = self.image_transforms,
         )
         val_dataset = DatasetClass(
-            self.config.data_dir,
+            os.path.join(self.config.data_dir, self.config.dataset),
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'val',
@@ -742,7 +758,7 @@ class FeatureAgent(object):
             image_transform = self.image_transforms,
         )
         test_dataset = DatasetClass(
-            self.config.data_dir,
+            os.path.join(self.config.data_dir, self.config.dataset),
             image_size = self.config.data.image_size,
             vocab = train_dataset.vocab,
             split = 'test',
@@ -772,21 +788,21 @@ class FeatureAgent(object):
 
         pbar = tqdm(total=len(data_loader))
 
-        chair_embs_a, chair_embs_b, chair_embs_c, text_embs = [], [], [], []
+        image_embs_a, image_embs_b, image_embs_c, text_embs = [], [], [], []
 
-        for index, chair_a, chair_b, chair_c, text_seq, text_len, _ in data_loader:
-            chair_a = chair_a.to(self.device)
-            chair_b = chair_b.to(self.device)
-            chair_c = chair_c.to(self.device)
+        for index, image_a, image_b, image_c, text_seq, text_len, _ in data_loader:
+            image_a = image_a.to(self.device)
+            image_b = image_b.to(self.device)
+            image_c = image_c.to(self.device)
             
             if modality == 'image':
-                chair_emb_a = extract_fun(chair_a)
-                chair_emb_b = extract_fun(chair_b)
-                chair_emb_c = extract_fun(chair_c)
+                image_emb_a = extract_fun(image_a)
+                image_emb_b = extract_fun(image_b)
+                image_emb_c = extract_fun(image_c)
 
-                chair_embs_a.append(chair_emb_a)
-                chair_embs_b.append(chair_emb_b)
-                chair_embs_c.append(chair_emb_c)
+                image_embs_a.append(image_emb_a)
+                image_embs_b.append(image_emb_b)
+                image_embs_c.append(image_emb_c)
             elif modality == 'text':
                 raw_text = [dataset.__gettext__(ix.item()) for ix in index]
                 text_emb = extract_fun(raw_text)
@@ -802,36 +818,36 @@ class FeatureAgent(object):
         pbar.close()
 
         if modality == 'image':
-            chair_embs_a = torch.cat(chair_embs_a, dim=0)
-            chair_embs_b = torch.cat(chair_embs_b, dim=0)
-            chair_embs_c = torch.cat(chair_embs_c, dim=0)
+            image_embs_a = torch.cat(image_embs_a, dim=0)
+            image_embs_b = torch.cat(image_embs_b, dim=0)
+            image_embs_c = torch.cat(image_embs_c, dim=0)
 
-            return chair_embs_a, chair_embs_b, chair_embs_c
+            return image_embs_a, image_embs_b, image_embs_c
         else:
             text_embs = torch.cat(text_embs, dim=0)
 
             return text_embs
 
 
-def extract_chair_embeddings(
+def extract_image_embeddings(
         index, 
-        chair_a_embeddings,
-        chair_b_embeddings,
-        chair_c_embeddings,
+        image_a_embeddings,
+        image_b_embeddings,
+        image_c_embeddings,
         device,
     ):
-    chair_emb_a, chair_emb_b, chair_emb_c = [], [], []
+    image_emb_a, image_emb_b, image_emb_c = [], [], []
     for ix in index:
-        chair_a_ix = chair_a_embeddings[ix.item()]
-        chair_b_ix = chair_b_embeddings[ix.item()] 
-        chair_c_ix = chair_c_embeddings[ix.item()]
-        chair_emb_a.append(chair_a_ix)
-        chair_emb_b.append(chair_b_ix)
-        chair_emb_c.append(chair_c_ix)
-    chair_emb_a = torch.from_numpy(np.stack(chair_emb_a)).to(device)
-    chair_emb_b = torch.from_numpy(np.stack(chair_emb_b)).to(device)
-    chair_emb_c = torch.from_numpy(np.stack(chair_emb_c)).to(device)
-    return chair_emb_a, chair_emb_b, chair_emb_c
+        image_a_ix = image_a_embeddings[ix.item()]
+        image_b_ix = image_b_embeddings[ix.item()] 
+        image_c_ix = image_c_embeddings[ix.item()]
+        image_emb_a.append(image_a_ix)
+        image_emb_b.append(image_b_ix)
+        image_emb_c.append(image_c_ix)
+    image_emb_a = torch.from_numpy(np.stack(image_emb_a)).to(device)
+    image_emb_b = torch.from_numpy(np.stack(image_emb_b)).to(device)
+    image_emb_c = torch.from_numpy(np.stack(image_emb_c)).to(device)
+    return image_emb_a, image_emb_b, image_emb_c
 
 
 def extract_text_embeddings(index, text_embeddings, device):
