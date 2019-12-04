@@ -25,7 +25,7 @@ from reference.text_utils import (
 from reference.utils import OrderedCounter
 
 
-class RefCOCOInContext(data.Dataset):
+class CocoInContext(data.Dataset):
 
     def __init__(
             self,
