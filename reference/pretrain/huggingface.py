@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
 
-    model_class, tokenizer_class, pretrained_weights = MODELS[args.model]
+    model_class, tokenizer_class, pretrained_weights = MODELS[args.nlp_model]
     # load pretrained model/tokenizer
     tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
     model = model_class.from_pretrained(pretrained_weights)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         args.data_dir,
         context_condition = args.context_condition,
         split_mode = args.split_mode,
-        image_size = None,
+        image_size = 64,
         override_vocab = None, 
         batch_size = args.batch_size,
         gpu_device = args.gpu_device, 
@@ -77,6 +77,6 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.model}/train.npy', train_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.model}/val.npy', val_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.model}/test.npy', test_text_embs.numpy())
+    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/train.npy', train_text_embs.numpy())
+    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/val.npy', val_text_embs.numpy())
+    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/test.npy', test_text_embs.numpy())

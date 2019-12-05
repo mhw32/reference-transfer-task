@@ -707,10 +707,13 @@ class FeatureAgent(object):
         ):
         self.dataset = dataset
         self.data_dir = data_dir
+        self.context_condition = context_condition
+        self.split_mode = split_mode
         self.batch_size = batch_size
         self.gpu_device = gpu_device
         self.cuda = cuda
         self.seed = seed
+        self.image_size = image_size
         self.image_transforms = image_transforms
         self.override_vocab = override_vocab
         self._choose_device()

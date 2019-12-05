@@ -289,7 +289,7 @@ if __name__ == "__main__":
         args.data_dir,
         context_condition = args.context_condition,
         split_mode = args.split_mode,
-        image_size = None,
+        image_size = 64,
         override_vocab = None, 
         batch_size = args.batch_size,
         gpu_device = args.gpu_device, 
