@@ -690,19 +690,27 @@ class EvaluateAgent(object):
 
 class FeatureAgent(object):
     """Agent class to extract features."""
-    
-    DEFAULT_CONFIG_FILE = os.path.join(
-        os.path.dirname(__file__), 
-        'configs',
-        'vanilla.json',
-    )
 
-    def __init__(self, override_vocab = None, gpu_device = None, image_transforms = None):
-        with open(self.DEFAULT_CONFIG_FILE, 'r') as fp:
-            self.config = json.load(fp)
-            if gpu_device is not None:
-                self.config['gpu_device'] = gpu_device
-        self.config = DotMap(self.config)
+    def __init__(
+            self, 
+            dataset,
+            data_dir,
+            context_condition = 'all',
+            split_mode = 'easy',
+            image_size = None,
+            override_vocab = None, 
+            batch_size = 128,
+            gpu_device = 0, 
+            cuda = True,
+            seed = 42,
+            image_transforms = None,
+        ):
+        self.dataset = dataset
+        self.data_dir = data_dir
+        self.batch_size = batch_size
+        self.gpu_device = gpu_device
+        self.cuda = cuda
+        self.seed = seed
         self.image_transforms = image_transforms
         self.override_vocab = override_vocab
         self._choose_device()
@@ -714,13 +722,13 @@ class FeatureAgent(object):
        
     def _choose_device(self):
         self.is_cuda = torch.cuda.is_available()
-        self.cuda = self.is_cuda & self.config.cuda
-        self.manual_seed = self.config.seed
+        self.cuda = self.is_cuda & self.cuda
+        self.manual_seed = self.seed
 
         if self.cuda:
             torch.cuda.manual_seed(self.manual_seed)
             self.device = torch.device("cuda")
-            torch.cuda.set_device(self.config.gpu_device)
+            torch.cuda.set_device(self.gpu_device)
             print_cuda_statistics()
         else:
             self.device = torch.device("cpu")
@@ -728,49 +736,49 @@ class FeatureAgent(object):
  
     def _create_dataloader(self, dataset):
         dataset_size = len(dataset)
-        loader = DataLoader(dataset, batch_size=self.config.optim.batch_size, shuffle=False)
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
         return loader, dataset_size
 
     def _load_datasets(self):
 
-        if self.config.dataset == 'chairs_in_context':
+        if self.dataset == 'chairs_in_context':
             DatasetClass = ChairsInContext
-        elif self.config.dataset == 'colors_in_context':
+        elif self.dataset == 'colors_in_context':
             DatasetClass = ColorsInContext
-        elif self.config.dataset in ['refclef', 'refcoco', 'refcoco+']: 
+        elif self.dataset in ['refclef', 'refcoco', 'refcoco+']: 
             DatasetClass = CocoInContext
         else:
-            raise Exception(f'Dataset {self.config.dataset} not supported.')
+            raise Exception(f'Dataset {self.dataset} not supported.')
         
         train_dataset = DatasetClass(
-            os.path.join(self.config.data_dir, self.config.dataset),
-            image_size = self.config.data.image_size,
+            os.path.join(self.data_dir, self.dataset),
+            image_size = self.image_size,
             vocab = self.override_vocab,
             split = 'train', 
-            context_condition = self.config.data.context_condition,
-            split_mode = self.config.data.split_mode, 
+            context_condition = self.context_condition,
+            split_mode = self.split_mode, 
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = self.image_transforms,
         )
         val_dataset = DatasetClass(
-            os.path.join(self.config.data_dir, self.config.dataset),
-            image_size = self.config.data.image_size,
+            os.path.join(self.data_dir, self.dataset),
+            image_size = self.image_size,
             vocab = train_dataset.vocab,
             split = 'val',
-            context_condition = self.config.data.context_condition,
-            split_mode = self.config.data.split_mode, 
+            context_condition = self.context_condition,
+            split_mode = self.split_mode, 
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = self.image_transforms,
         )
         test_dataset = DatasetClass(
-            os.path.join(self.config.data_dir, self.config.dataset),
-            image_size = self.config.data.image_size,
+            os.path.join(self.data_dir, self.dataset),
+            image_size = self.image_size,
             vocab = train_dataset.vocab,
             split = 'test',
-            context_condition = self.config.data.context_condition,
-            split_mode = self.config.data.split_mode, 
+            context_condition = self.context_condition,
+            split_mode = self.split_mode, 
             train_frac = 0.80,
             val_frac = 0.10,
             image_transform = self.image_transforms,

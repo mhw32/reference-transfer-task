@@ -25,7 +25,33 @@ def get_w2v(word_dict):
 
 
 if __name__ == "__main__":
-    agent = FeatureAgent()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dataset', type=str)
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('--context-condition', type=str, default='all', 
+                        choices=['all', 'far', 'close'])
+    parser.add_argument('--split-mode', type=str, default='easy',
+                        choices=['easy', 'hard'])
+    parser.add_argument('--batch-size', type=int, default=128)
+    parser.add_argument('--gpu-device', type=int, default=0)
+    parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--seed', type=int, default=42)
+    args = parser.parse_args()
+
+    agent = FeatureAgent(
+        args.dataset,
+        args.data_dir,
+        context_condition = args.context_condition,
+        split_mode = args.split_mode,
+        image_size = None,
+        override_vocab = None, 
+        batch_size = args.batch_size,
+        gpu_device = args.gpu_device, 
+        cuda = args.cuda,
+        seed = args.seed,
+        image_transforms = None,
+    )
     word_dict = agent.train_dataset.vocab['w2i']
     word_vec = get_w2v(word_dict)
 

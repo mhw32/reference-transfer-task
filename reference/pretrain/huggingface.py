@@ -4,6 +4,7 @@ import torch
 
 from transformers import *
 from reference.agents import FeatureAgent
+from reference.setup import process_config
 
 MODELS = {
     'bert':         (BertModel,       BertTokenizer,       'bert-base-uncased'),
@@ -21,11 +22,21 @@ MODELS = {
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='bert', 
+    parser.add_argument('dataset', type=str)
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('--nlp-model', type=str, default='bert', 
                         choices=[
                             'bert', 'gpt_openai', 'gpt_2', 'ctrl', 'transforxl', 
                             'xlnet', 'xlm', 'distilbert', 'roberta',
                         ])
+    parser.add_argument('--context-condition', type=str, default='all', 
+                        choices=['all', 'far', 'close'])
+    parser.add_argument('--split-mode', type=str, default='easy',
+                        choices=['easy', 'hard'])
+    parser.add_argument('--batch-size', type=int, default=128)
+    parser.add_argument('--gpu-device', type=int, default=0)
+    parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
 
     model_class, tokenizer_class, pretrained_weights = MODELS[args.model]
@@ -48,7 +59,20 @@ if __name__ == "__main__":
         features = torch.cat(features, dim=0)
         return features
 
-    agent = FeatureAgent()
+    agent = FeatureAgent(
+        args.dataset,
+        args.data_dir,
+        context_condition = args.context_condition,
+        split_mode = args.split_mode,
+        image_size = None,
+        override_vocab = None, 
+        batch_size = args.batch_size,
+        gpu_device = args.gpu_device, 
+        cuda = args.cuda,
+        seed = args.seed,
+        image_transforms = None,
+    )
+
     train_text_embs = agent.extract_features(extract, modality='text', split='train')
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')

@@ -10,7 +10,6 @@ from torchvision import transforms
 
 from reference.agents import FeatureAgent
 
-GPU_DEVICE = 4
 CUR_DIR = os.path.dirname(__file__)
 MVAE_DIR = os.path.realpath(os.path.join(CUR_DIR, '../mvae'))
 MODEL_DIR = "/mnt/fs5/wumike/hybrid/trained_models/8_22/longtests/experiments/TrainAgent_coco_vaevae_seed1337/2019-08-22--11_31_20"
@@ -21,24 +20,37 @@ sys.path.append(MVAE_DIR)
 from src.agents.agents import *
 from src.utils.utils import load_json
 
-config_path = os.path.join(MODEL_DIR, 'config.json')
-checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
-assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
-
-config = load_json(config_path)
-config['gpu_device'] = GPU_DEVICE
-config = DotMap(config)
-
-AgentClass = globals()[config.agent]
-mvae = AgentClass(config)
-mvae.load_checkpoint('model_best.pth.tar')
-mvae._set_models_to_eval()
-gpu_device = mvae.config.gpu_device
-
-override_vocab = copy.deepcopy(mvae.train_dataset.vocab)
-
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dataset', type=str)
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('--context-condition', type=str, default='all', 
+                        choices=['all', 'far', 'close'])
+    parser.add_argument('--split-mode', type=str, default='easy',
+                        choices=['easy', 'hard'])
+    parser.add_argument('--batch-size', type=int, default=128)
+    parser.add_argument('--gpu-device', type=int, default=0)
+    parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--seed', type=int, default=42)
+    args = parser.parse_args()
+
+    config_path = os.path.join(MODEL_DIR, 'config.json')
+    checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
+    assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
+
+    config = load_json(config_path)
+    config['gpu_device'] = arg.gpu_device
+    config = DotMap(config)
+
+    AgentClass = globals()[config.agent]
+    mvae = AgentClass(config)
+    mvae.load_checkpoint('model_best.pth.tar')
+    mvae._set_models_to_eval()
+
+    override_vocab = copy.deepcopy(mvae.train_dataset.vocab)
+
     image_transforms = transforms.Compose([
         transforms.Resize(32),
         transforms.CenterCrop(32),
@@ -46,9 +58,17 @@ if __name__ == "__main__":
     ])
 
     agent = FeatureAgent(
-        override_vocab = override_vocab,
+        args.dataset,
+        args.data_dir,
+        context_condition = args.context_condition,
+        split_mode = args.split_mode,
+        image_size = None,
+        override_vocab = override_vocab, 
+        batch_size = args.batch_size,
+        gpu_device = args.gpu_device, 
+        cuda = args.cuda,
+        seed = args.seed,
         image_transforms = image_transforms,
-        gpu_device = gpu_device,
     )
 
     def extract_img(chair):
