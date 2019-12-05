@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 from reference.agents import FeatureAgent
+from reference.setup import process_config
 
 INFERSENT_PATH = '/mnt/fs5/wumike/reference/infersent/infersent2.pkl'
 W2V_PATH = '/mnt/fs5/wumike/reference/fastText/crawl-300d-2M.vec'
@@ -263,13 +264,40 @@ class InferSent(nn.Module):
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dataset', type=str)
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('--context-condition', type=str, default='all', 
+                        choices=['all', 'far', 'close'])
+    parser.add_argument('--split-mode', type=str, default='easy',
+                        choices=['easy', 'hard'])
+    parser.add_argument('--batch-size', type=int, default=128)
+    parser.add_argument('--gpu-device', type=int, default=0)
+    parser.add_argument('--cuda', action='store_true', default=False)
+    parser.add_argument('--seed', type=int, default=42)
+    args = parser.parse_args()
+    
     params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
                     'pool_type': 'max', 'dpout_model': 0.0, 'version': 2}
     infersent = InferSent(params_model)
     infersent.load_state_dict(torch.load(INFERSENT_PATH))
     infersent.set_w2v_path(W2V_PATH)
 
-    agent = FeatureAgent()
+    agent = FeatureAgent(
+        args.dataset,
+        args.data_dir,
+        context_condition = args.context_condition,
+        split_mode = args.split_mode,
+        image_size = None,
+        override_vocab = None, 
+        batch_size = args.batch_size,
+        gpu_device = args.gpu_device, 
+        cuda = args.cuda,
+        seed = args.seed,
+        image_transforms = None,
+    )
+
     train_dataset = agent.train_dataset
     train_len = len(train_dataset)
     sentences = []
