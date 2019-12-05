@@ -59,7 +59,7 @@ def process_dataset(refer, split):
 if __name__ == "__main__":
     OUT_DIR = '/mnt/fs5/wumike/datasets/refer_datasets/processed'
     data_names = ['refclef', 'refcoco', 'refcoco+']
-    data_splits = ['berkeley', 'google', 'google']
+    data_splits = ['berkeley', 'google', 'unc']
 
     for data_name, data_split in zip(data_names, data_splits):
         print "processing %s." % data_name
@@ -77,12 +77,15 @@ if __name__ == "__main__":
         val_dset   = process_dataset(refer, 'val')
         test_dset  = process_dataset(refer, 'test')
 
+        print('saving train pickle')
         with open(os.path.join(processed_dir, 'train.pickle'), 'wb') as fp:
             pickle.dump(train_dset, fp)
 
+        print('saving val pickle')
         with open(os.path.join(processed_dir, 'val.pickle'), 'wb') as fp:
             pickle.dump(val_dset, fp)
 
+        print('saving test pickle')
         with open(os.path.join(processed_dir, 'test.pickle'), 'wb') as fp:
             pickle.dump(test_dset, fp)
 
