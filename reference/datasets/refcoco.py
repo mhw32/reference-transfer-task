@@ -123,7 +123,7 @@ class CocoInContext(data.Dataset):
         #   [label, ...]
         images, masks, texts, labels = self._unroll_data(
             images, 
-            masks, ,
+            masks,
             texts,
             min_num_obj=3,  # ignore images with < 3 objects
         )
