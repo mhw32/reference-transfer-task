@@ -3,6 +3,7 @@ import sys
 import math
 import json
 import copy
+import torch
 import pickle
 import numpy as np
 import pandas as pd
@@ -59,6 +60,7 @@ class CocoInContext(data.Dataset):
         self.min_token_occ = min_token_occ
         self.max_sent_len = max_sent_len
         self.random_seed = random_seed
+        self.image_transform = image_transform
 
         pickle_path = os.path.join(self.data_dir, f'{self.split}.pickle')
         with open(pickle_path, 'rb') as fp:
@@ -248,4 +250,4 @@ class CocoInContext(data.Dataset):
 
         text_seq = torch.from_numpy(np.array(text_seq)).long()
 
-        return index, image, mask, text_seq, text_len, label
+        return index, image, masks, text_seq, text_len, label
