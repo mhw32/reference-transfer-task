@@ -251,3 +251,21 @@ class CocoInContext(data.Dataset):
         text_seq = torch.from_numpy(np.array(text_seq)).long()
 
         return index, image, masks, text_seq, text_len, label
+
+
+if __name__ == "__main__":
+    data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/refcoco+'
+    dataset = CocoInContext(
+        self,
+	data_dir,
+	data_size = None,
+	image_size = 224,
+	vocab = None,
+	split = 'train',
+	train_frac = 0.64,
+	val_frac = 0.16,
+	image_transform = None,
+	min_token_occ = 2,
+	max_sent_len = 33,
+	random_seed = 42,
+    )

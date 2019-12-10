@@ -3,6 +3,7 @@
 import os
 import sys
 import pickle
+from tqdm import tqdm
 
 refer_dir = os.path.join(os.path.dirname(__file__), 'refer')
 sys.path.append(refer_dir)
@@ -14,6 +15,7 @@ def process_dataset(refer, split):
     img_ids = refer.getImgIds(ref_ids=ref_ids)
     refs = [refer.imgToRefs[img_id] for img_id in img_ids]
 
+    pbar = tqdm(total = len(img_ids))
     paths, masks, texts = [], [], []
 
     for img_id in img_ids:
@@ -31,6 +33,9 @@ def process_dataset(refer, split):
                 paths.append(image_path)
                 masks.append(mask)
                 texts.append(tokens)
+
+        pbar.update()
+    pbar.close()
 
     return {
         'img_paths': paths,
