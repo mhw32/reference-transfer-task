@@ -77,6 +77,10 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/train.npy', train_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/val.npy', val_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}/test.npy', test_text_embs.numpy())
+    out_dirname = f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}'
+    if not os.path.isdir(out_dirname):
+        os.makedirs(out_dirname)
+    
+    np.save(f'{out_dirname}/train.npy', train_text_embs.numpy())
+    np.save(f'{out_dirname}/val.npy', val_text_embs.numpy())
+    np.save(f'{out_dirname}/test.npy', test_text_embs.numpy())
