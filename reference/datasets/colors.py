@@ -150,6 +150,20 @@ class ColorsInContext(data.Dataset):
         self.text_raw = text_raw
         self.text = text
 
+    def get_human_accuracy(self):
+        csv_path = os.path.join(self.data_dir, 'filteredCorpus.csv')
+        df = pd.read_csv(csv_path)
+        df = df[df['role'] == 'listener']
+
+        # measure using the context the user chose
+        if self.context_condition != 'all':
+            df = df[df['condition'] == self.context_condition]
+
+        df = df.dropna()
+
+        accuracy = np.asarray(df['outcome']).astype(np.float).mean()
+        return accuracy
+
     def _process_splits(self, data):
         rs = np.random.RandomState(self.random_seed)
         rs.shuffle(data)

@@ -156,6 +156,19 @@ class ChairsInContext(data.Dataset):
         self.text_raw = text_raw
         self.text = text
 
+    def get_human_accuracy(self):
+        csv_path = os.path.join(self.data_dir, 'chairs2k_group_data.csv')
+        df = pd.read_csv(csv_path)
+        df = df[df['communication_role'] == 'listener']
+        
+        if self.context_condition != 'all':
+            df = df[df['context_condition'] == self.context_condition]
+        
+        df = df.dropna()
+
+        accuracy = np.asarray(df['correct']).astype(np.float).mean()
+        return accuracy
+
     def _get_chair_image_names(self):
         image_paths = glob(os.path.join(self.image_dir, '*.png'))
         names = [os.path.basename(path) for path in image_paths]
