@@ -123,7 +123,7 @@ class CocoInContext(data.Dataset):
         #   [[mask_a, mask_b, ...], ...]
         #   [[text_a, text_b, ...], ...]
         #   [label, ...]
-        images, masks, texts, labels = self._unroll_data(
+        images, masks, texts, labels, max_obj = self._unroll_data(
             images, 
             masks,
             texts,
@@ -151,12 +151,17 @@ class CocoInContext(data.Dataset):
         all_texts  = []
         all_labels = []
 
+        max_num_obj = 0
+
         for i in tqdm(range(len(images))):
             image, mask, text = images[i], masks[i], texts[i]
             assert len(mask) == len(text)
             
             if len(mask) < min_num_obj:
                 continue
+
+            if len(mask) > max_num_obj: 
+                max_num_obj = len(mask)
 
             # TODO: what to do about > 3 objects?
 
@@ -170,7 +175,7 @@ class CocoInContext(data.Dataset):
                 all_texts.append(text_j)
                 all_labels.append(label)
 
-        return all_images, all_masks, all_texts, all_labels
+        return all_images, all_masks, all_texts, all_labels, max_num_obj
 
     def build_vocab(self, texts):
         w2i = dict()
