@@ -29,7 +29,8 @@
             "n_embedding": 64,
             "n_gru_hidden": 128,
             "gru_bidirectional": false,
-            "n_gru_layers": 1
+            "n_gru_layers": 1,
+            "sneak_peak": false
         }
     },
     "optim": {

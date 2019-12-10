@@ -27,6 +27,8 @@ class Witness(nn.Module):
             n_gru_hidden = 64,
             gru_bidirectional = False,
             n_gru_layers = 1,
+            # ---
+            sneak_peak = False,
         ):
         
         super(Witness, self).__init__()
@@ -43,6 +45,7 @@ class Witness(nn.Module):
         self.n_gru_hidden = n_gru_hidden
         self.gru_bidirectional = gru_bidirectional
         self.n_gru_layers = n_gru_layers
+        self.sneak_peak = sneak_peak
 
         if self.train_image_from_scratch:
             self.image_conv = nn.Sequential(
@@ -139,7 +142,11 @@ class Witness(nn.Module):
                 sorted_len.data.tolist(),
                 batch_first=True,
             )
-            _, text_hid = self.text_gru(text_packed, text_gru_h0.unsqueeze(0))
+            if self.sneak_peak:
+                _, text_hid = self.text_gru(text_packed, text_gru_h0.unsqueeze(0))
+            else:
+                _, text_hid = self.text_gru(text_packed, None)
+
             text_hid = text_hid.view(batch_size, -1)
 
             _, reversed_idx = torch.sort(sorted_idx)

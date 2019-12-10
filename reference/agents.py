@@ -288,8 +288,10 @@ class TrainAgent(BaseAgent):
             vocab_size = self.vocab_size,
             n_embedding = self.config.model.text.n_embedding,
             n_gru_hidden = self.config.model.text.n_gru_hidden,
-            # gru_bidirectional = self.config.model.text.gru_bidirectional,
+            gru_bidirectional = self.config.model.text.gru_bidirectional,
             n_gru_layers = self.config.model.text.n_gru_layers,
+            # ---
+            sneak_peak = self.config.model.text.sneak_peak,
         ).to(self.device)
 
     def _create_optimizer(self):
