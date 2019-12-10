@@ -123,11 +123,12 @@ class CocoInContext(data.Dataset):
         #   [[mask_a, mask_b, ...], ...]
         #   [[text_a, text_b, ...], ...]
         #   [label, ...]
-        images, masks, texts, labels, max_obj = self._unroll_data(
+        images, masks, texts, labels = self._unroll_data(
             images, 
             masks,
             texts,
-            min_num_obj=3,  # ignore images with < 3 objects
+            min_num_obj = 3,   # ignore images with < 3 objects
+            max_num_obj = 10,  # ignore images with > 10 objects
         )
 
         # convert raw tokens -> vector of vocabulary indices
@@ -142,7 +143,7 @@ class CocoInContext(data.Dataset):
         self.text_raws = text_raws
         self.size = len(images)
 
-    def _unroll_data(self, images, masks, texts, min_num_obj=3):
+    def _unroll_data(self, images, masks, texts, min_num_obj=3, max_num_obj=10):
         assert len(images) == len(masks)
         assert len(images) == len(texts)
 
@@ -151,8 +152,6 @@ class CocoInContext(data.Dataset):
         all_texts  = []
         all_labels = []
 
-        max_num_obj = 0
-
         for i in tqdm(range(len(images))):
             image, mask, text = images[i], masks[i], texts[i]
             assert len(mask) == len(text)
@@ -160,10 +159,8 @@ class CocoInContext(data.Dataset):
             if len(mask) < min_num_obj:
                 continue
 
-            if len(mask) > max_num_obj: 
-                max_num_obj = len(mask)
-
-            # TODO: what to do about > 3 objects?
+            if len(mask) > max_num_obj:
+                continue
 
             for j in range(len(mask)):
                 mask_j = copy.deepcopy(mask)
@@ -175,7 +172,7 @@ class CocoInContext(data.Dataset):
                 all_texts.append(text_j)
                 all_labels.append(label)
 
-        return all_images, all_masks, all_texts, all_labels, max_num_obj
+        return all_images, all_masks, all_texts, all_labels
 
     def build_vocab(self, texts):
         w2i = dict()
@@ -261,16 +258,15 @@ class CocoInContext(data.Dataset):
 if __name__ == "__main__":
     data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/refcoco+'
     dataset = CocoInContext(
-        self,
-	data_dir,
-	data_size = None,
-	image_size = 224,
-	vocab = None,
-	split = 'train',
-	train_frac = 0.64,
-	val_frac = 0.16,
-	image_transform = None,
-	min_token_occ = 2,
-	max_sent_len = 33,
-	random_seed = 42,
+        data_dir,
+        data_size = None,
+        image_size = 224,
+        vocab = None,
+        split = 'train',
+        train_frac = 0.64,
+        val_frac = 0.16,
+        image_transform = None,
+        min_token_occ = 2,
+        max_sent_len = 33,
+        random_seed = 42,
     )
