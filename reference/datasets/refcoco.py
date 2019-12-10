@@ -25,6 +25,9 @@ from reference.text_utils import (
 )
 from reference.utils import OrderedCounter
 
+MIN_NUM_OBJ = 3
+MAX_NUM_OBJ = 10
+
 
 class CocoInContext(data.Dataset):
 
@@ -127,9 +130,11 @@ class CocoInContext(data.Dataset):
             images, 
             masks,
             texts,
-            min_num_obj = 3,   # ignore images with < 3 objects
-            max_num_obj = 10,  # ignore images with > 10 objects
+            min_num_obj = MIN_NUM_OBJ,   # ignore images with < 3 objects
+            max_num_obj = MAX_NUM_OBJ,  # ignore images with > 10 objects
         )
+
+        self.max_num_obj = MAX_NUM_OBJ
 
         # convert raw tokens -> vector of vocabulary indices
         text_seqs, text_lens, text_raws = self._process_text(texts)
@@ -238,6 +243,9 @@ class CocoInContext(data.Dataset):
         text_seq = self.text_seqs[index]
         text_len = self.text_lens[index]
 
+        # TODO: pad masks to max_num_object
+        num_obj = len(masks)
+
         image = Image.open(os.path.join(self.data_dir, image))
 
         if self.image_transform is None:
@@ -252,7 +260,7 @@ class CocoInContext(data.Dataset):
 
         text_seq = torch.from_numpy(np.array(text_seq)).long()
 
-        return index, image, masks, text_seq, text_len, label
+        return index, image, masks, text_seq, text_len, label, num_obj
 
 
 if __name__ == "__main__":
