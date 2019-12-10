@@ -14,42 +14,25 @@ def process_dataset(refer, split):
     img_ids = refer.getImgIds(ref_ids=ref_ids)
     refs = [refer.imgToRefs[img_id] for img_id in img_ids]
 
-    def get_image_paths(img_ids):
-        paths = []
-        for img_id in img_ids:
-            image = refer.Imgs[img_id]
-            path = image['file_name']
-            paths.append(path)
-        return paths
+    paths, masks, texts = [], [], []
 
-    def get_masks(img_refs):
-        img_masks = []
-        for refs in img_refs:
-            masks = []
-            for ref in refs:
-                mask = refer.getMask(ref)
+    for img_id in img_ids:
+        refs = refer.imgToRefs[img_id]
+        image = refer.Imgs[img_id]
+        image_path = image['file_name']
+
+        for ref in refs:
+            mask = refer.getMask(ref)
+
+            sents = ref['sentences']
+            for sent in sents:
+                tokens = sent['tokens']
+
+                paths.append(image_path)
                 masks.append(mask)
-            img_masks.append(masks)
-        return img_masks
-
-    def get_texts(img_refs):
-        ref_sents = []
-        for refs in img_refs:
-            sents = []
-            for ref in refs:
-                # just take the first sentence
-                sent = ref['sentences'][0]
-                sents.append(sent['tokens'])
-            ref_sents.append(sents)
-        return ref_sents
-
-    masks = get_masks(refs)
-    texts = get_texts(refs)
-    paths = get_image_paths(img_ids)
+                texts.append(tokens)
 
     return {
-        'ref_ids': ref_ids,
-        'img_ids': img_ids,
         'img_paths': paths,
         'masks': masks,
         'texts': texts,
