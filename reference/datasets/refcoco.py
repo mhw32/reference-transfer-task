@@ -12,6 +12,7 @@ from glob import glob
 from tqdm import tqdm
 import skimage.io as io
 from nltk import sent_tokenize, word_tokenize
+from collections import defaultdict
 
 import torch
 import torch.utils.data as data
@@ -24,9 +25,6 @@ from reference.text_utils import (
     UNK_TOKEN,
 )
 from reference.utils import OrderedCounter
-
-MIN_NUM_OBJ = 3
-MAX_NUM_OBJ = 10
 
 
 class CocoInContext(data.Dataset):
@@ -65,9 +63,10 @@ class CocoInContext(data.Dataset):
         self.random_seed = random_seed
         self.image_transform = image_transform
 
+        print('Loading pickle file')
         pickle_path = os.path.join(self.data_dir, f'{self.split}.pickle')
         with open(pickle_path, 'rb') as fp:
-            data_pickle = pickle.load(fp)
+            data_pickle = pickle.load(fp, encoding='latin1')
 
         images = data_pickle['img_paths']
         masks = data_pickle['masks']
@@ -116,6 +115,9 @@ class CocoInContext(data.Dataset):
         self.pad_index = self.w2i[self.pad_token]
         self.unk_index = self.w2i[self.unk_token]
 
+        # unwrap masks
+        masks = [mask['mask'] for mask in masks]
+
         # right now, these are stored 
         #   [img_path, ...]
         #   [[bunch of masks], ...]
@@ -126,15 +128,8 @@ class CocoInContext(data.Dataset):
         #   [[mask_a, mask_b, ...], ...]
         #   [[text_a, text_b, ...], ...]
         #   [label, ...]
-        images, masks, texts, labels = self._unroll_data(
-            images, 
-            masks,
-            texts,
-            min_num_obj = MIN_NUM_OBJ,   # ignore images with < 3 objects
-            max_num_obj = MAX_NUM_OBJ,  # ignore images with > 10 objects
-        )
-
-        self.max_num_obj = MAX_NUM_OBJ
+        self.image2index, images, masks, texts, self.max_classes = \
+            self._build_image_map(images, masks, texts)
 
         # convert raw tokens -> vector of vocabulary indices
         text_seqs, text_lens, text_raws = self._process_text(texts)
@@ -142,42 +137,54 @@ class CocoInContext(data.Dataset):
         self.images = images
         self.masks = masks
         self.texts = texts
-        self.labels = labels
         self.text_seqs = text_seqs
         self.text_lens = text_lens
         self.text_raws = text_raws
         self.size = len(images)
 
-    def _unroll_data(self, images, masks, texts, min_num_obj=3, max_num_obj=10):
+    def _build_image_map(self, images, masks, texts, min_num_obj=3, max_num_obj=15):
         assert len(images) == len(masks)
         assert len(images) == len(texts)
 
-        all_images = []
-        all_masks  = []
-        all_texts  = []
-        all_labels = []
-
+        image2index = defaultdict(lambda: [])
+        print('Building map from image to metadata')
         for i in tqdm(range(len(images))):
-            image, mask, text = images[i], masks[i], texts[i]
-            assert len(mask) == len(text)
-            
-            if len(mask) < min_num_obj:
+            image = images[i]
+            image2index[image].append(i)
+
+        print(f'Ignoring images with <{min_num_obj} and >{max_num_obj} objects')
+        image2index_clean = {}
+        for i in tqdm(range(len(images))):
+            image = images[i]
+            objs = image2index[image]
+            if len(objs) < min_num_obj:
                 continue
-
-            if len(mask) > max_num_obj:
+            if len(objs) > max_num_obj:
                 continue
+            image2index_clean[image] = objs
 
-            for j in range(len(mask)):
-                mask_j = copy.deepcopy(mask)
-                text_j = text[j]
-                label = j
+        print('Removing other bad data')
+        images_clean, masks_clean, texts_clean = [], [], []
+        for i in range(len(images)):
+            image = images[i]
+            if image in image2index_clean:
+                images_clean.append(images[i])
+                masks_clean.append(masks[i])
+                texts_clean.append(texts[i])
 
-                all_images.append(image)
-                all_masks.append(mask_j)
-                all_texts.append(text_j)
-                all_labels.append(label)
+        print('Rebuilding map from image to metadata')
+        image2index = defaultdict(lambda: [])
+        for i in tqdm(range(len(images_clean))):
+            image = images_clean[i]
+            image2index[image].append(i)
 
-        return all_images, all_masks, all_texts, all_labels
+        print('Computing statstics')
+        max_obs_obj = 0
+        for image, objs in image2index.iteritems():
+            if len(objs) > max_obs_obj:
+                max_obs_obj = len(objs)
+
+        return image2index, images_clean, masks_clean, texts_clean, max_obs_obj
 
     def build_vocab(self, texts):
         w2i = dict()
@@ -238,14 +245,18 @@ class CocoInContext(data.Dataset):
 
     def __getitem__(self, index):
         image = self.images[index]
-        masks = self.masks[index]
-        label = self.labels[index]
-        text_seq = self.text_seqs[index]
-        text_len = self.text_lens[index]
+        ctx_indices = self.image2index[image]
+        ctx_indices.remove(index)  # do not include this in context indices
 
-        # TODO: pad masks to max_num_object
-        num_obj = len(masks)
+        tgt_mask = self.masks[index]
+        tgt_text_seq = np.array(self.text_seqs[index])
+        tgt_text_len = np.array(self.text_lens[index])
 
+        ctx_masks = [
+            torch.from_numpy(self.masks[_index]).long()
+            for _index in ctx_indices
+        ]
+        num_class = len(ctx_masks) + 1
         image = Image.open(os.path.join(self.data_dir, image))
 
         if self.image_transform is None:
@@ -258,13 +269,14 @@ class CocoInContext(data.Dataset):
         else:
             image = self.image_transform(image)
 
-        text_seq = torch.from_numpy(np.array(text_seq)).long()
+        tgt_text_seq = torch.from_numpy(tgt_text_seq).long()
 
-        return index, image, masks, text_seq, text_len, label, num_obj
+        breakpoint()
+        return index, image, tgt_mask, tgt_text_seq, tgt_text_len, ctx_masks, num_class
 
 
 if __name__ == "__main__":
-    data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/refcoco+'
+    data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/processed/refcoco+'
     dataset = CocoInContext(
         data_dir,
         data_size = None,
@@ -278,3 +290,4 @@ if __name__ == "__main__":
         max_sent_len = 33,
         random_seed = 42,
     )
+    dataset.__getitem__(0)
