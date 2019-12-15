@@ -31,7 +31,8 @@ class CocoInContext(data.Dataset):
 
     def __init__(
             self,
-            data_dir, 
+            data_dir,
+            image_dir, 
             data_size = None,
             image_size = 224,
             vocab = None, 
@@ -52,6 +53,7 @@ class CocoInContext(data.Dataset):
             assert data_size <= 1
 
         self.data_dir = data_dir
+        self.image_dir = image_dir
         self.data_size = data_size
         self.image_size = image_size
         self.vocab = vocab
@@ -180,7 +182,7 @@ class CocoInContext(data.Dataset):
 
         print('Computing statstics')
         max_obs_obj = 0
-        for image, objs in image2index.iteritems():
+        for image, objs in image2index.items():
             if len(objs) > max_obs_obj:
                 max_obs_obj = len(objs)
 
@@ -257,7 +259,7 @@ class CocoInContext(data.Dataset):
             for _index in ctx_indices
         ]
         num_class = len(ctx_masks) + 1
-        image = Image.open(os.path.join(self.data_dir, image))
+        image = Image.open(os.path.join(self.image_dir, image))
 
         if self.image_transform is None:
             image_transform = transforms.Compose([
@@ -277,6 +279,7 @@ class CocoInContext(data.Dataset):
 
 if __name__ == "__main__":
     data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/processed/refcoco+'
+    image_dir = '/mnt/fs5/wumike/datasets/refer_datasets/images/mscoco/images'
     dataset = CocoInContext(
         data_dir,
         data_size = None,
