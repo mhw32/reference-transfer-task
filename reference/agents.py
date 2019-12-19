@@ -900,6 +900,26 @@ def extract_image_embeddings(
     return image_emb_a, image_emb_b, image_emb_c
 
 
+def extract_masked_image_embeddings(
+        index, 
+        full_image_embeddings,
+        mask_image_embeddings,
+        device,
+    ):
+    full_image_emb, mask_image_emb = [], []
+    
+    for ix in index:
+        full_image_ix = full_image_embeddings[ix.item()]
+        mask_image_ix = mask_image_embeddings[ix.item()] 
+        full_image_emb.append(full_image_ix)
+        mask_image_emb.append(mask_image_ix)
+    
+    full_image_emb = torch.from_numpy(np.stack(full_image_emb)).to(device)
+    mask_image_emb = torch.from_numpy(np.stack(mask_image_emb)).to(device)
+    
+    return full_image_emb, mask_image_emb
+
+
 def extract_text_embeddings(index, text_embeddings, device):
     text_emb = []
     for ix in index:
@@ -907,3 +927,256 @@ def extract_text_embeddings(index, text_embeddings, device):
         text_emb.append(text_emb_ix)
     text_emb = torch.from_numpy(np.stack(text_emb)).to(device)
     return text_emb
+
+
+class MaskedTrainAgent(TrainAgent):
+
+    def __init__(self, config, override_vocab = None):
+        self.override_vocab = override_vocab
+        super().__init__(config)
+
+        if not self.config.train_image_from_scratch:
+            assert self.config.pretrain_image_embedding_dir is not None
+            
+            pretrain_image_embedding_path = os.path.join(
+                self.config.pretrain_root,
+                self.config.dataset,
+                self.config.pretrain_image_embedding_dir,
+            )
+
+            train_full_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path, 
+                'train_full_image.npy',
+            )
+            train_mask_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path, 
+                'train_mask_image.npy',
+            )
+
+            val_full_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path, 
+                'val_full_image.npy',
+            )
+            val_mask_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path, 
+                'val_mask_image.npy',
+            )
+
+            self.train_full_image_embeddings = np.load(train_full_image_embedding_file)
+            self.train_mask_image_embeddings = np.load(train_mask_image_embedding_file)
+
+            self.val_full_image_embeddings = np.load(val_full_image_embedding_file)
+            self.val_mask_image_embeddings = np.load(val_mask_image_embedding_file)
+
+            # if we have chosen a subset then, we need to properly subset these
+            if self.config.data.data_size is not None:
+                subset = self.train_dataset.subset_indices
+                assert subset is not None
+                self.train_full_image_embeddings = self.train_full_image_embeddings[subset]
+                self.train_mask_image_embeddings = self.train_mask_image_embeddings[subset]
+
+        if not self.config.train_text_from_scratch:
+            assert self.config.pretrain_text_embedding_dir is not None
+
+            pretrain_text_embedding_path = os.path.join(
+                self.config.pretrain_root,
+                self.config.dataset,
+                self.config.pretrain_text_embedding_dir,
+            )
+
+            train_embedding_file = os.path.join(
+                pretrain_text_embedding_path,
+                'train.npy',
+            )
+            val_embedding_file = os.path.join(
+                pretrain_text_embedding_path,
+                'val.npy',
+            )
+
+            self.train_text_embeddings = np.load(train_embedding_file)
+            self.val_text_embeddings = np.load(val_embedding_file)
+
+            if self.config.data.data_size is not None:
+                subset = self.train_dataset.subset_indices
+                assert subset is not None
+                self.train_text_embeddings = self.train_text_embeddings[subset]
+    
+    def train_one_epoch(self):
+        num_batches = self.train_len // self.config.optim.batch_size
+        tqdm_batch = tqdm(total=num_batches,
+                            desc="[Epoch {}]".format(self.current_epoch))
+
+        self.model.train()
+        epoch_loss = AverageMeter()
+
+        max_object = self.train_dataset.max_classes
+
+        for index, full_image, mask_image_set, text_seq, text_len, label, num_object in self.train_loader:
+            batch_size = full_image.size(0)
+
+            full_image = full_image.to(self.device)
+            mask_image_set = mask_image_set.to(self.device)
+            text_seq = text_seq.to(self.device)
+            text_len = text_len.to(self.device)
+            label = label.to(self.device)
+
+            full_image_emb, mask_image_set_emb = None, None
+            if not self.config.train_image_from_scratch:
+                full_image_emb, mask_image_set_emb = extract_masked_image_embeddings(
+                    index, 
+                    self.train_full_image_embeddings,
+                    self.train_mask_image_embeddings,
+                    self.device,
+                )
+
+            text_emb = None
+            if not self.config.train_text_from_scratch:
+                text_emb = extract_text_embeddings(index, self.train_text_embeddings, self.device)
+
+            logits = []
+            for j in range(max_object):
+                mask_image = mask_image_set[:, j]
+                
+                mask_image_emb = None
+                if not self.config.train_image_from_scratch:
+                    mask_image_emb = mask_image_set_emb[:, j]
+
+                logit_j = self.model(
+                    full_image, 
+                    mask_image, 
+                    text_seq, 
+                    text_len, 
+                    full_image_emb = full_image_emb,
+                    mask_image_emb = mask_image_emb,
+                    text_emb = text_emb,
+                )
+                logits.append(logit_j)
+            logits = torch.cat(logits, dim=1)
+
+            # we have to compute elementwise loss
+            loss = 0
+            for i in range(batch_size):
+                loss_i = F.cross_entropy(
+                    logits[i, :num_object[i].item()].unsqueeze(0), 
+                    label[i].unsqueeze(0),
+                )
+                loss = loss + loss_i
+            loss = loss / float(batch_size)
+
+            self.optim.zero_grad()
+            loss.backward()
+            self.optim.step()
+            
+            epoch_loss.update(loss.item(), batch_size)
+            tqdm_batch.set_postfix({"Train Loss": epoch_loss.avg})
+
+            self.train_losses.append(epoch_loss.val)
+
+            self.current_iteration += 1
+            tqdm_batch.update()
+
+        self.current_loss = epoch_loss.avg
+        tqdm_batch.close()
+
+    def validate(self):
+        num_batches = self.val_len // self.config.optim.batch_size
+        tqdm_batch = tqdm(total=num_batches, desc="[Val]")
+
+        self.model.eval()
+
+        epoch_loss = AverageMeter()
+        num_correct = 0.
+        num_total = 0.
+
+        with torch.no_grad():
+            for index, full_image, mask_image_set, text_seq, text_len, label, num_object in self.val_loader:
+                batch_size = full_image.size(0)
+
+                full_image = full_image.to(self.device)
+                mask_image_set = mask_image_set.to(self.device)
+                text_seq = text_seq.to(self.device)
+                text_len = text_len.to(self.device)
+                label = label.to(self.device)
+
+                full_image_emb, mask_image_set_emb = None, None
+                if not self.config.train_image_from_scratch:
+                    full_image_emb, mask_image_set_emb = extract_masked_image_embeddings(
+                        index, 
+                        self.train_full_image_embeddings,
+                        self.train_mask_image_embeddings,
+                        self.device,
+                    )
+
+                text_emb = None
+                if not self.config.train_text_from_scratch:
+                    text_emb = extract_text_embeddings(index, self.val_text_embeddings, self.device)
+
+                logit_a = self.model(image_a, text_seq, text_len, image_emb = image_emb_a, text_emb = text_emb)
+                logit_b = self.model(image_b, text_seq, text_len, image_emb = image_emb_b, text_emb = text_emb)
+                logit_c = self.model(image_c, text_seq, text_len, image_emb = image_emb_c, text_emb = text_emb)
+
+                logits = []
+                for j in range(max_object):
+                    mask_image = mask_image_set[:, j]
+                    
+                    mask_image_emb = None
+                    if not self.config.train_image_from_scratch:
+                        mask_image_emb = mask_image_set_emb[:, j]
+
+                    logit_j = self.model(
+                        full_image, 
+                        mask_image, 
+                        text_seq, 
+                        text_len, 
+                        full_image_emb = full_image_emb,
+                        mask_image_emb = mask_image_emb,
+                        text_emb = text_emb,
+                    )
+                    logits.append(logit_j)
+                logits = torch.cat(logits, dim=1)
+
+                # we have to compute elementwise loss
+                loss = 0
+                for i in range(batch_size):
+                    loss_i = F.cross_entropy(
+                        logits[i, :num_object[i].item()].unsqueeze(0), 
+                        label[i].unsqueeze(0),
+                    )
+                    loss = loss + loss_i
+                loss = loss / float(batch_size)
+                
+                epoch_loss.update(loss.item(), batch_size)
+
+                pred = F.softmax(logits, dim=1)
+                _, pred = torch.max(pred, 1)
+                num_correct += torch.sum(pred == label).item()
+                num_total += batch_size
+
+                tqdm_batch.set_postfix({
+                    "Val Loss": epoch_loss.avg,
+                    "Val Acc": num_correct / num_total,
+                })
+                tqdm_batch.update()
+
+        tqdm_batch.close()
+
+        self.current_val_iteration += 1
+        self.current_val_loss = epoch_loss.avg
+        
+        self.val_losses.append(self.current_val_loss)
+        self.val_accs.append(num_correct / num_total)
+
+        # save if this was the best validation accuracy
+        if self.current_val_loss <= self.best_val_loss:
+            self.best_val_loss = self.current_val_loss
+
+        return self.current_val_loss
+
+
+class MaskedEvaluateAgent(EvaluateAgent):
+    pass
+
+
+class MaskedFeatureAgent(FeatureAgent):
+    pass
+
