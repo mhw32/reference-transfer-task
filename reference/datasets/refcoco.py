@@ -273,15 +273,15 @@ class CocoInContext(data.Dataset):
 
         tgt_text_seq = torch.from_numpy(tgt_text_seq).long()
 
-        breakpoint()
         return index, image, tgt_mask, tgt_text_seq, tgt_text_len, ctx_masks, num_class
 
 
 if __name__ == "__main__":
     data_dir = '/mnt/fs5/wumike/datasets/refer_datasets/processed/refcoco+'
-    image_dir = '/mnt/fs5/wumike/datasets/refer_datasets/images/mscoco/images'
+    image_dir = '/mnt/fs5/wumike/datasets/refer_datasets/images/mscoco/images/train2014'
     dataset = CocoInContext(
         data_dir,
+        image_dir, 
         data_size = None,
         image_size = 224,
         vocab = None,
