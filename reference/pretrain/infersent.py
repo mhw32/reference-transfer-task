@@ -318,7 +318,7 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    OUT_DIR = '/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent'
+    OUT_DIR = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent'
     if not os.path.isdir(OUT_DIR):
         os.makedirs(OUT_DIR)
 
