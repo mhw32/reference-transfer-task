@@ -15,8 +15,9 @@
     },
     "train_image_from_scratch": false,
     "train_text_from_scratch": false,
-    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/vgg",
-    "pretrain_text_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/word2vec",
+    "pretrain_root": "/mnt/fs5/wumike/reference/pretrain",
+    "pretrain_image_embedding_dir": "vgg",
+    "pretrain_text_embedding_dir": "word2vec",
     "model": {
         "n_bottleneck": 128,
         "image": {

@@ -15,8 +15,9 @@
     },
     "train_image_from_scratch": false,
     "train_text_from_scratch": false,
-    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/ir_imagenet",
-    "pretrain_text_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/infersent",
+    "pretrain_root": "/mnt/fs5/wumike/reference/pretrain",
+    "pretrain_image_embedding_dir": "ir_imagenet",
+    "pretrain_text_embedding_dir": "infersent",
     "model": {
         "n_bottleneck": 128,
         "image": {

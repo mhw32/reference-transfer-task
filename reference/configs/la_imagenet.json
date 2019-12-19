@@ -15,7 +15,8 @@
     },
     "train_image_from_scratch": false,
     "train_text_from_scratch": true,
-    "pretrain_image_embedding_dir": "/mnt/fs5/wumike/reference/pretrain/la_imagenet",
+    "pretrain_root": "/mnt/fs5/wumike/reference/pretrain",
+    "pretrain_image_embedding_dir": "la_imagenet",
     "pretrain_text_embedding_dir": null,
     "model": {
         "n_bottleneck": 128,
