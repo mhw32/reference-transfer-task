@@ -8,7 +8,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 GLOVE_PATH = '/mnt/fs5/wumike/reference/glove/glove.840B.300d.txt'
 
@@ -44,7 +44,12 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
 
-    agent = FeatureAgent(
+    if args.dataset in ['refclef', 'refcoco', 'refcoco+']:
+        FeatureAgentClass = MaskedFeatureAgent
+    else:
+        FeatureAgentClass = FeatureAgent
+
+    agent = FeatureAgentClass(
         args.dataset,
         args.data_dir,
         context_condition = args.context_condition,

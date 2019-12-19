@@ -284,7 +284,12 @@ if __name__ == "__main__":
     infersent.load_state_dict(torch.load(INFERSENT_PATH))
     infersent.set_w2v_path(W2V_PATH)
 
-    agent = FeatureAgent(
+    if args.dataset in ['refclef', 'refcoco', 'refcoco+']:
+        FeatureAgentClass = MaskedFeatureAgent
+    else:
+        FeatureAgentClass = FeatureAgent
+
+    agent = FeatureAgentClass(
         args.dataset,
         args.data_dir,
         context_condition = args.context_condition,

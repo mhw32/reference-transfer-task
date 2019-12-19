@@ -66,7 +66,12 @@ if __name__ == "__main__":
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    agent = FeatureAgent(
+    if args.dataset in ['refclef', 'refcoco', 'refcoco+']:
+        FeatureAgentClass = MaskedFeatureAgent
+    else:
+        FeatureAgentClass = FeatureAgent
+
+    agent = FeatureAgentClass(
         args.dataset,
         args.data_dir,
         context_condition = args.context_condition,
