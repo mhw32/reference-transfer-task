@@ -7,3 +7,6 @@
 [submodule "reference/datasets/refer"]
 	path = reference/datasets/refer
 	url = https://github.com/lichengunc/refer
+[submodule "reference/skip-thoughts.torch"]
+	path = reference/skip-thoughts.torch
+	url = https://github.com/Cadene/skip-thoughts.torch.git
