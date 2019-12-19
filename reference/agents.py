@@ -1050,7 +1050,7 @@ class MaskedTrainAgent(TrainAgent):
                     mask_image_emb = mask_image_emb,
                     text_emb = text_emb,
                 )
-                logits.append(logit_j)
+                logits.append(logit_j.unsqueeze(1))
             logits = torch.cat(logits, dim=1)
 
             # we have to compute elementwise loss
@@ -1111,10 +1111,6 @@ class MaskedTrainAgent(TrainAgent):
                 if not self.config.train_text_from_scratch:
                     text_emb = extract_text_embeddings(index, self.val_text_embeddings, self.device)
 
-                logit_a = self.model(image_a, text_seq, text_len, image_emb = image_emb_a, text_emb = text_emb)
-                logit_b = self.model(image_b, text_seq, text_len, image_emb = image_emb_b, text_emb = text_emb)
-                logit_c = self.model(image_c, text_seq, text_len, image_emb = image_emb_c, text_emb = text_emb)
-
                 logits = []
                 for j in range(max_object):
                     mask_image = mask_image_set[:, j]
@@ -1132,7 +1128,7 @@ class MaskedTrainAgent(TrainAgent):
                         mask_image_emb = mask_image_emb,
                         text_emb = text_emb,
                     )
-                    logits.append(logit_j)
+                    logits.append(logit_j.unsqueeze(1))
                 logits = torch.cat(logits, dim=1)
 
                 # we have to compute elementwise loss
@@ -1174,9 +1170,226 @@ class MaskedTrainAgent(TrainAgent):
 
 
 class MaskedEvaluateAgent(EvaluateAgent):
-    pass
+    
+    def __init__(
+            self, 
+            checkpoint_dir, 
+            checkpoint_name = 'model_best.pth.tar',
+        ):
+        
+        super().__init__()
+        
+        self.logger = logging.getLogger("Agent")
+
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint = torch.load(os.path.join(checkpoint_dir, 'checkpoints', checkpoint_name))
+        self.config = self.checkpoint['config']
+        self.agent = TrainAgent(self.config, override_vocab = self.checkpoint['vocab'])
+        self.agent.load_checkpoint(
+            checkpoint_name, 
+            checkpoint_dir = checkpoint_dir, 
+            load_model = True,
+            load_epoch = False, 
+            load_optim = False,
+        )
+
+        self._load_datasets()
+        self.test_loader, self.test_len = self._create_dataloader(self.test_dataset)
+        self.test_losses = []
+        self.test_accs = []
+
+        if not self.config.train_image_from_scratch:
+            assert self.config.pretrain_image_embedding_dir is not None
+
+            pretrain_image_embedding_path = os.path.join(
+                self.config.pretrain_root,
+                self.config.dataset,
+                self.config.pretrain_image_embedding_dir,
+            )
+            
+            test_full_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path,
+                'test_full_image.npy',
+            )
+            test_mask_image_embedding_file = os.path.join(
+                pretrain_image_embedding_path,
+                'test_mask_image.npy',
+            )
+
+            self.test_full_image_embeddings = np.load(test_full_image_embedding_file)
+            self.test_mask_image_embeddings = np.load(test_mask_image_embedding_file)
+
+        if not self.config.train_text_from_scratch:
+            assert self.config.pretrain_text_embedding_dir is not None
+
+            pretrain_text_embedding_path = os.path.join(
+                self.config.pretrain_root,
+                self.config.dataset,
+                self.config.pretrain_text_embedding_dir,
+            )
+
+            test_embedding_file = os.path.join(
+                pretrain_text_embedding_path,
+                'test.npy',
+            )
+
+            self.test_text_embeddings = np.load(test_embedding_file)
+
+    def test(self):
+        num_batches = self.test_len // self.config.optim.batch_size
+        tqdm_batch = tqdm(total=num_batches, desc="[Test]")
+
+        self.agent.model.eval()
+        max_object = self.train_dataset.max_classes
+
+        epoch_loss = AverageMeter()
+        num_correct = 0.
+        num_total = 0.
+
+        with torch.no_grad():
+            for index, full_image, mask_image_set, text_seq, text_len, label, num_object in self.test_loader:
+                batch_size = full_image.size(0)
+
+                full_image = full_image.to(self.device)
+                mask_image_set = mask_image_set.to(self.device)
+                text_seq = text_seq.to(self.device)
+                text_len = text_len.to(self.device)
+                label = label.to(self.device)
+
+                full_image_emb, mask_image_set_emb = None, None
+                if not self.config.train_image_from_scratch:
+                    full_image_emb, mask_image_set_emb = extract_masked_image_embeddings(
+                        index, 
+                        self.train_full_image_embeddings,
+                        self.train_mask_image_embeddings,
+                        self.device,
+                    )
+
+                text_emb = None
+                if not self.config.train_text_from_scratch:
+                    text_emb = extract_text_embeddings(
+                        index, 
+                        self.train_text_embeddings, 
+                        self.device,
+                    )
+
+                logits = []
+                for j in range(max_object):
+                    mask_image = mask_image_set[:, j]
+                    
+                    mask_image_emb = None
+                    if not self.config.train_image_from_scratch:
+                        mask_image_emb = mask_image_set_emb[:, j]
+
+                    logit_j = self.model(
+                        full_image, 
+                        mask_image, 
+                        text_seq, 
+                        text_len, 
+                        full_image_emb = full_image_emb,
+                        mask_image_emb = mask_image_emb,
+                        text_emb = text_emb,
+                    )
+                    logits.append(logit_j.unsqueeze(1))
+                logits = torch.cat(logits, dim=1)
+
+                # we have to compute elementwise loss
+                loss = 0
+                for i in range(batch_size):
+                    loss_i = F.cross_entropy(
+                        logits[i, :num_object[i].item()].unsqueeze(0), 
+                        label[i].unsqueeze(0),
+                    )
+                    loss = loss + loss_i
+                loss = loss / float(batch_size)
+
+                epoch_loss.update(loss.item(), batch_size)
+
+                pred = F.softmax(logits, dim=1)
+                _, pred = torch.max(pred, 1)
+                num_correct += torch.sum(pred == label).item()
+                num_total += batch_size
+
+                tqdm_batch.set_postfix({
+                    "Test Loss": epoch_loss.avg,
+                    "Test Acc": num_correct / num_total,
+                })
+                tqdm_batch.update()
+
+        tqdm_batch.close()
+
+        current_test_loss = epoch_loss.avg
+        self.test_losses.append(current_test_loss)
+        self.test_accs.append(num_correct / num_total)
+
+        return current_test_loss
 
 
 class MaskedFeatureAgent(FeatureAgent):
-    pass
+    
+    def extract_features(self, extract_fun, modality='image', split='train'):
+        assert split in ['train', 'val', 'test']
+        assert modality in ['image', 'text', 'encoded_text']
 
+        if split == 'train':
+            dataset = self.train_dataset
+            data_loader = self.train_loader
+        elif split == 'val':
+            dataset = self.val_dataset
+            data_loader = self.val_loader
+        elif split == 'test':
+            dataset = self.test_dataset
+            data_loader = self.test_loader
+
+        pbar = tqdm(total=len(data_loader))
+        max_object = self.train_dataset.max_classes
+
+        full_image_embs, mask_image_set_embs, text_embs = [], [], []
+
+        for index, full_image, mask_image_set, text_seq, text_len, label, num_object in data_loader:
+            batch_size = full_image.size(0)
+
+            full_image = full_image.to(self.device)
+            mask_image_set = mask_image_set.to(self.device)
+            text_seq = text_seq.to(self.device)
+            text_len = text_len.to(self.device)
+            label = label.to(self.device)
+            
+            if modality == 'image':
+                full_image_emb = extract_fun(full_image)
+
+                mask_image_set_emb = []
+                for j in range(max_object):
+                    mask_image_j_emb = extract_fun(mask_image_set[:, j])
+                    mask_image_set_emb.append(
+                        mask_image_j_emb.unsqueeze(1),
+                    )
+                
+                mask_image_set_emb = torch.cat(mask_image_set_emb, dim=1)
+                full_image_embs.append(full_image_emb)
+                mask_image_set_embs.append(mask_image_set_emb)
+            
+            elif modality == 'text':
+                raw_text = [dataset.__gettext__(ix.item()) for ix in index]
+                text_emb = extract_fun(raw_text)
+
+                text_embs.append(text_emb)
+            
+            elif modality == 'encoded_text':
+                text_emb = extract_fun(text_seq, text_len)
+
+                text_embs.append(text_emb)
+        
+            pbar.update()
+
+        pbar.close()
+
+        if modality == 'image':
+            full_image_embs = torch.cat(full_image_embs, dim=0)
+            mask_image_set_embs = torch.cat(mask_image_set_embs, dim=0)
+
+            return full_image_embs, mask_image_set_embs
+        else:
+            text_embs = torch.cat(text_embs, dim=0)
+
+            return text_embs
