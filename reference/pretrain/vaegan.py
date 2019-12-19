@@ -36,7 +36,13 @@ if __name__ == "__main__":
 
     OUT_IMG_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/vaegan_image"
     OUT_TXT_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/vaegan_text"
-    
+   
+    if not os.path.isdir(OUT_IMG_DIR):
+        os.makedirs(OUT_IMG_DIR)
+
+    if not os.path.isdir(OUT_TXT_DIR):
+        os.makedirs(OUT_TXT_DIR)
+
     config_path = os.path.join(MODEL_DIR, 'config.json')
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
     assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))

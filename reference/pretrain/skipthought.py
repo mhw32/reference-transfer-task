@@ -62,6 +62,10 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='encoded_text', split='val')
     test_text_embs = agent.extract_features(extract, modality='encoded_text', split='test')
 
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/skipthought/train.npy', train_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/skipthought/val.npy', val_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/skipthought/test.npy', test_text_embs.numpy())
+    OUT_DIR = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/skipthought'
+    if not os.path.isdir(OUT_DIR):
+        os.makedirs(OUT_DIR)
+
+    np.save(f'{OUT_DIR}/train.npy', train_text_embs.numpy())
+    np.save(f'{OUT_DIR}/val.npy', val_text_embs.numpy())
+    np.save(f'{OUT_DIR}/test.npy', test_text_embs.numpy())

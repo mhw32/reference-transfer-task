@@ -56,6 +56,8 @@ if __name__ == "__main__":
     word_vec = get_w2v(word_dict)
 
     out_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/word2vec'
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
 
     with open(f'{out_dir}/word_dict.pickle', 'wb') as fp:
         pickle.dump(word_vec, fp)

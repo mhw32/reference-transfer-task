@@ -24,6 +24,8 @@ multimodal_scripts = [
     'vaevae.py',
 ]
 
+cur_dir = os.path.dirname(__file__)
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     cuda_str = '--cuda' if args.cuda else ''
     
     def make_command(name):
-        return f'python pretrain/{name} {args.dataset} {args.data_dir} --context-condition {args.context_condition} --split-mode {args.split_mode} --gpu-device {args.gpu_device} {cuda_str} --seed {args.seed}'
+        return f'python {os.path.join(cur_dir, name)} {args.dataset} {args.data_dir} --context-condition {args.context_condition} --split-mode {args.split_mode} --gpu-device {args.gpu_device} {cuda_str} --seed {args.seed}'
     
     if args.image_only:
         names = image_scripts

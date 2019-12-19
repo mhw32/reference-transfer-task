@@ -34,6 +34,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     OUT_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/ir_imagenet"
+    if not os.path.isdir(OUT_DIR):
+        os.makedirs(OUT_DIR)
 
     config_path = os.path.join(MODEL_DIR, 'config.json')
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')

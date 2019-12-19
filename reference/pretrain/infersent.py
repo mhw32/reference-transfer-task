@@ -318,6 +318,10 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent/train.npy', train_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent/val.npy', val_text_embs.numpy())
-    np.save(f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent/test.npy', test_text_embs.numpy())
+    OUT_DIR = '/mnt/fs5/wumike/reference/pretrain/{args.dataset}/infersent'
+    if not os.path.isdir(OUT_DIR):
+        os.makedirs(OUT_DIR)
+
+    np.save(f'{OUT_DIR}/train.npy', train_text_embs.numpy())
+    np.save(f'{OUT_DIR}/val.npy', val_text_embs.numpy())
+    np.save(f'{OUT_DIR}/test.npy', test_text_embs.numpy())
