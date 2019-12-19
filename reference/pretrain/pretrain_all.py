@@ -46,7 +46,11 @@ if __name__ == "__main__":
     cuda_str = '--cuda' if args.cuda else ''
     
     def make_command(name):
-        return f'python {os.path.join(cur_dir, name)} {args.dataset} {args.data_dir} --context-condition {args.context_condition} --split-mode {args.split_mode} --gpu-device {args.gpu_device} {cuda_str} --seed {args.seed}'
+        if name == 'huggingface':
+            extra = '--all'
+        else:
+            extra = ''
+        return f'python {os.path.join(cur_dir, name)} {args.dataset} {args.data_dir} --context-condition {args.context_condition} --split-mode {args.split_mode} --gpu-device {args.gpu_device} {cuda_str} --seed {args.seed} {extra}'
     
     if args.image_only:
         names = image_scripts
