@@ -12,8 +12,6 @@ from reference.agents import FeatureAgent
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
 MODEL_DIR = "/mnt/fs5/wumike/localagg/trained_models/10_11/experiments/coco_composite_lrdrop2/2019-10-27--10_37_43"
-OUT_IMG_DIR = "/mnt/fs5/wumike/reference/pretrain/ir_coco_image"
-OUT_TXT_DIR = "/mnt/fs5/wumike/reference/pretrain/ir_coco_text"
 
 sys.path.append(LOCALAGG_DIR)
 from src.agents.agents import *
@@ -34,6 +32,9 @@ if __name__ == "__main__":
     parser.add_argument('--cuda', action='store_true', default=False)
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
+
+    OUT_IMG_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/ir_coco_image"
+    OUT_TXT_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/ir_coco_text"
 
     config_path = os.path.join(MODEL_DIR, 'config.json')
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')

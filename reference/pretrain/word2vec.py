@@ -55,7 +55,7 @@ if __name__ == "__main__":
     word_dict = agent.train_dataset.vocab['w2i']
     word_vec = get_w2v(word_dict)
 
-    out_dir = '/mnt/fs5/wumike/reference/pretrain/word2vec'
+    out_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/word2vec'
 
     with open(f'{out_dir}/word_dict.pickle', 'wb') as fp:
         pickle.dump(word_vec, fp)

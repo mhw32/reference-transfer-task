@@ -12,7 +12,6 @@ from reference.agents import FeatureAgent
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
 MODEL_DIR = "/mnt/fs5/wumike/localagg/trained_models/7_12/experiments/imagenet_la/2019-08-17--11_00_06"
-OUT_DIR = "/mnt/fs5/wumike/reference/pretrain/la_imagenet"
 
 sys.path.append(LOCALAGG_DIR)
 from src.agents.agents import *
@@ -33,6 +32,8 @@ if __name__ == "__main__":
     parser.add_argument('--cuda', action='store_true', default=False)
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
+
+    OUT_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/la_imagenet"
 
     config_path = os.path.join(MODEL_DIR, 'config.json')
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')

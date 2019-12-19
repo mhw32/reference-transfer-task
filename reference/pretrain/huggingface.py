@@ -77,7 +77,7 @@ if __name__ == "__main__":
     val_text_embs = agent.extract_features(extract, modality='text', split='val')
     test_text_embs = agent.extract_features(extract, modality='text', split='test')
 
-    out_dirname = f'/mnt/fs5/wumike/reference/pretrain/huggingface/{args.nlp_model}'
+    out_dirname = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/huggingface/{args.nlp_model}'
     if not os.path.isdir(out_dirname):
         os.makedirs(out_dirname)
     

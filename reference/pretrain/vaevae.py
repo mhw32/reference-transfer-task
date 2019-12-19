@@ -13,8 +13,6 @@ from reference.agents import FeatureAgent
 CUR_DIR = os.path.dirname(__file__)
 MVAE_DIR = os.path.realpath(os.path.join(CUR_DIR, '../mvae'))
 MODEL_DIR = "/mnt/fs5/wumike/hybrid/trained_models/8_22/longtests/experiments/TrainAgent_coco_vaevae_seed1337/2019-08-22--11_31_20"
-OUT_IMG_DIR = "/mnt/fs5/wumike/reference/pretrain/vaevae_image"
-OUT_TXT_DIR = "/mnt/fs5/wumike/reference/pretrain/vaevae_text"
 
 sys.path.append(MVAE_DIR)
 from src.agents.agents import *
@@ -35,6 +33,9 @@ if __name__ == "__main__":
     parser.add_argument('--cuda', action='store_true', default=False)
     parser.add_argument('--seed', type=int, default=42)
     args = parser.parse_args()
+
+    OUT_IMG_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/vaevae_image"
+    OUT_TXT_DIR = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/vaevae_text"
 
     config_path = os.path.join(MODEL_DIR, 'config.json')
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
