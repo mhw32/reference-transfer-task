@@ -230,11 +230,11 @@ class TrainAgent(BaseAgent):
             )
 
             train_embedding_file = os.path.join(
-                pretrain_text_embedding_path
+                pretrain_text_embedding_path,
                 'train.npy',
             )
             val_embedding_file = os.path.join(
-                pretrain_text_embedding_path
+                pretrain_text_embedding_path,
                 'val.npy',
             )
 
@@ -565,15 +565,15 @@ class EvaluateAgent(object):
             )
             
             test_image_a_embedding_file = os.path.join(
-                pretrain_image_embedding_path
+                pretrain_image_embedding_path,
                 'test_image_a.npy',
             )
             test_image_b_embedding_file = os.path.join(
-                pretrain_image_embedding_path
+                pretrain_image_embedding_path,
                 'test_image_b.npy',
             )
             test_image_c_embedding_file = os.path.join(
-                pretrain_image_embedding_path
+                pretrain_image_embedding_path,
                 'test_image_c.npy',
             ) 
             
