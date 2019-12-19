@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 CUR_DIR = os.path.dirname(__file__)
 MVAE_DIR = os.path.realpath(os.path.join(CUR_DIR, '../mvae'))
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
     config = load_json(config_path)
-    config['gpu_device'] = GPU_DEVICE
+    config['gpu_device'] = args.gpu_device
     config = DotMap(config)
 
     AgentClass = globals()[config.agent]

@@ -8,7 +8,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 W2V_PATH = '/mnt/fs5/wumike/reference/fastText/crawl-300d-2M.vec'
 

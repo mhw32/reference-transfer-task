@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))

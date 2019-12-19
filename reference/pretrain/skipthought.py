@@ -8,7 +8,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 from reference.setup import process_config
 
 CUR_DIR = os.path.dirname(__file__)

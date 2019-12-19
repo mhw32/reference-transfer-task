@@ -10,7 +10,7 @@ from torchvision.models import vgg19
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 
 if __name__ == "__main__":

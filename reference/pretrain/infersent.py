@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 from reference.setup import process_config
 
 INFERSENT_PATH = '/mnt/fs5/wumike/reference/infersent/infersent2.pkl'

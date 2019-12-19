@@ -2,7 +2,7 @@ import os
 import numpy as np
 import torch
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 
 if __name__ == "__main__":

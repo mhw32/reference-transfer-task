@@ -10,7 +10,7 @@ from torchvision.models import resnet34
 import torch
 import torch.nn as nn
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 
 if __name__ == "__main__":
@@ -89,4 +89,4 @@ if __name__ == "__main__":
     
     np.save(f'{OUT_DIR}/test_chair_a.npy', test_chair_a.cpu().numpy())
     np.save(f'{OUT_DIR}/test_chair_b.npy', test_chair_b.cpu().numpy())
-    np.save(f'{OUT_DIR}/test_chair_c.npy', test_chair_c.cpu().numpy()
+    np.save(f'{OUT_DIR}/test_chair_c.npy', test_chair_c.cpu().numpy())

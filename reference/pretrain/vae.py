@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 GPU_DEVICE = 1
 CUR_DIR = os.path.dirname(__file__)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         context_condition = args.context_condition,
         split_mode = args.split_mode,
         image_size = None,
-        override_vocab = override_vocab, 
+        override_vocab = None, 
         batch_size = args.batch_size,
         gpu_device = args.gpu_device, 
         cuda = args.cuda,

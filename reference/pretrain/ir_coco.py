@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 
 CUR_DIR = os.path.dirname(__file__)
 LOCALAGG_DIR = os.path.realpath(os.path.join(CUR_DIR, '../localagg'))
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     checkpoint_dir = os.path.join(MODEL_DIR, 'checkpoints')
     assert os.path.isfile(os.path.join(checkpoint_dir, 'model_best.pth.tar'))
 
-    config = process_config(config_path, override_dotmap={'gpu_device': GPU_DEVICE})
+    config = process_config(config_path, override_dotmap={'gpu_device': args.gpu_device})
     AgentClass = globals()[config.agent]
     localagg = AgentClass(config)
     localagg.load_checkpoint(

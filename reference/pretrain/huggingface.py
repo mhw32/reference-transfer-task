@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from transformers import *
-from reference.agents import FeatureAgent
+from reference.agents import FeatureAgent, MaskedFeatureAgent
 from reference.setup import process_config
 
 MODELS = {
