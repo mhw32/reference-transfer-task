@@ -279,14 +279,16 @@ class CocoInContext(data.Dataset):
         if self.image_transform is None:
             image_transform = transforms.Compose([
                 transforms.Resize(256),
-                transforms.Resize(self.image_size),
+                transforms.CenterCrop(self.image_size),
                 transforms.ToTensor(),
             ])
+        else:
+            image_transform = self.image_transform
 
-        image = self.image_transform(image)
+        image = image_transform(image)
 
         for i in range(num_class):
-            mask_images[i] = self.image_transform(mask_images[i])
+            mask_images[i] = image_transform(mask_images[i])
 
         num_pad = self.max_classes - num_class
         pad_images = [torch.zeros_like(image) for _ in range(num_pad)]
