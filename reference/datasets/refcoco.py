@@ -27,12 +27,13 @@ from reference.text_utils import (
 from reference.utils import OrderedCounter
 
 
+
+
 class CocoInContext(data.Dataset):
 
     def __init__(
             self,
-            data_dir,
-            image_dir, 
+            data_dir, 
             data_size = None,
             image_size = 224,
             vocab = None, 
@@ -47,6 +48,14 @@ class CocoInContext(data.Dataset):
         ):
 
         super().__init__()
+
+        data_root = os.path.dirname(data_dir)
+        data_name = os.path.basename(data_dir)
+        if data_name == 'refclef':
+            image_dirname = 'mscoco/images/train2014'
+        else:
+            image_dirname = 'saiapr_tc-1'
+        image_dir = os.path.join(data_root, 'images', image_dirname)
 
         if data_size is not None:
             assert data_size > 0
