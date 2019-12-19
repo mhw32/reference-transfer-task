@@ -72,6 +72,12 @@ class ColorsInContext(data.Dataset):
         else:
             self.image_transform = image_transform
 
+        if not os.path.isdir(self.image_dir):
+            os.makedirs(self.image_dir)
+
+        if not os.path.isdir(self.cache_dir):
+            os.makedirs(self.cache_dir)
+
         cache_clean_data = os.path.join(
             self.cache_dir,
             f'clean_data_{self.context_condition}.pickle',
@@ -99,7 +105,7 @@ class ColorsInContext(data.Dataset):
                     'alt2ColL',
                     'contents',
             ]]
-            data = np.asarray(df)
+            data = np.asarray(data)
             
             print('Saving cleaned data to pickle.')
             with open(cache_clean_data, 'wb') as fp:
@@ -239,19 +245,23 @@ class ColorsInContext(data.Dataset):
     
     def __getitem__(self, index):
         h_tgt, s_tgt, l_tgt, h_alt1, s_alt1, l_alt1, h_alt2, s_alt2, l_alt2, _ = self.data[index]
-        
-        r_tgt, g_tgt, b_tgt = hsl2rgb(h_tgt, s_tgt, l_tgt)
-        r_alt1, g_alt1, b_alt1 = hsl2rgb(h_alt1, s_alt1, l_alt1)
-        r_alt2, g_alt2, b_alt2 = hsl2rgb(h_alt2, s_alt2, l_alt2)
+       
+        r_tgt, g_tgt, b_tgt = hsl2rgb(h_tgt, s_tgt / 100., l_tgt / 100.)
+        r_alt1, g_alt1, b_alt1 = hsl2rgb(h_alt1, s_alt1 / 100., l_alt1 / 100.)
+        r_alt2, g_alt2, b_alt2 = hsl2rgb(h_alt2, s_alt2 / 100., l_alt2 / 100.)
 
         color_tgt = np.array([r_tgt, g_tgt, b_tgt])[:, np.newaxis]\
-            .repeat(3, self.image_size**2).rehape(3, self.image_size, self.image_size)
+            .repeat(self.image_size**2, 1).reshape(3, self.image_size, self.image_size)
         color_alt1 = np.array([r_alt1, g_alt1, b_alt1])[:, np.newaxis]\
-            .repeat(3, self.image_size**2).rehape(3, self.image_size, self.image_size)
+            .repeat(self.image_size**2, 1).reshape(3, self.image_size, self.image_size)
         color_alt2 = np.array([r_alt2, g_alt2, b_alt2])[:, np.newaxis]\
-            .repeat(3, self.image_size**2).rehape(3, self.image_size, self.image_size)
+            .repeat(self.image_size**2, 1).reshape(3, self.image_size, self.image_size)
         
         label = 0
+
+        color_tgt = color_tgt.transpose(1, 2, 0).astype('uint8')
+        color_alt1 = color_alt1.transpose(1, 2, 0).astype('uint8')
+        color_alt2 = color_alt2.transpose(1, 2, 0).astype('uint8')
 
         color_tgt_pil = Image.fromarray(color_tgt).convert('RGB')
         color_alt1_pil = Image.fromarray(color_alt1).convert('RGB')
