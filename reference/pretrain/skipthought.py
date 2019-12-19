@@ -52,10 +52,10 @@ if __name__ == "__main__":
     vocab_list = list(agent.train_dataset.vocab['w2i'].keys())
     biskip = BiSkip(SKIPTHOUGHT_PATH, vocab_list)
 
-    def extract_txt(text_seq, text_len):
+    def extract(text_seq, text_len):
         with torch.no_grad():
-            lengths = text_len.detach().cpu().numpy().to_list()
-            output = biskip(text_seq.long(), lengths=lengths)
+            lengths = text_len.cpu().numpy().tolist()
+            output = biskip(text_seq.cpu().long(), lengths=lengths)
         return output
 
     train_text_embs = agent.extract_features(extract, modality='encoded_text', split='train')
