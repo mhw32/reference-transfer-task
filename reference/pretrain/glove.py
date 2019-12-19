@@ -20,6 +20,9 @@ def get_glove(word_dict):
             values = line.split()
             word = values[0]
             if word in word_dict:
+                if len(values) > 301:
+                    print(f'Invalid entry: {word}')
+                    continue
                 vector = np.asarray(values[1:], "float32")
                 word_vec[word] = vector
     print('Found %s(/%s) words with GloVe vectors' % (len(word_vec), len(word_dict)))
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     word_dict = agent.train_dataset.vocab['w2i']
     word_vec = get_glove(word_dict)
 
-    out_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/glove'
+    out_dir = f"/mnt/fs5/wumike/reference/pretrain/{args.dataset}/glove"
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
 
