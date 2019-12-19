@@ -9,7 +9,8 @@ text_scripts = [
     'huggingface.py',
     'infersent.py',
     'skipthought.py',
-    'word2vec.py'
+    'word2vec.py',
+    'glove.py'
 ]
 image_scripts = [
     'vgg.py',
