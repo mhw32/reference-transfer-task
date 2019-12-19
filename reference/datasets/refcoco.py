@@ -247,20 +247,34 @@ class CocoInContext(data.Dataset):
 
     def __getitem__(self, index):
         image = self.images[index]
-        breakpoint()
         ctx_indices = self.image2index[image]
-        ctx_indices.remove(index)  # do not include this in context indices
+        label = ctx_indices.index(index)
 
-        tgt_mask = self.masks[index]
         tgt_text_seq = np.array(self.text_seqs[index])
         tgt_text_len = np.array(self.text_lens[index])
 
         ctx_masks = [
             torch.from_numpy(self.masks[_index]).long()
             for _index in ctx_indices
-        ]
-        num_class = len(ctx_masks) + 1
+        ]   
+        num_class = len(ctx_masks)
+
+        # load image
         image = Image.open(os.path.join(self.image_dir, image))
+        
+        mask_images = []
+
+        # make copies and crop
+        for i in range(num_class):
+            mask_i = ctx_masks[i]
+            ones_w_i, ones_h_i = np.where(mask_i.numpy() > 0)
+            min_w_i, max_w_i = np.min(ones_w_i), np.max(ones_w_i)
+            min_h_i, max_h_i = np.min(ones_h_i), np.max(ones_h_i)
+
+            image_i = copy.deepcopy(image)
+            image_i = image_i.crop((min_h_i, min_w_i, max_h_i, max_w_i))
+
+            mask_images.append(image_i)
 
         if self.image_transform is None:
             image_transform = transforms.Compose([
@@ -268,13 +282,21 @@ class CocoInContext(data.Dataset):
                 transforms.Resize(self.image_size),
                 transforms.ToTensor(),
             ])
-            image = image_transform(image)
-        else:
-            image = self.image_transform(image)
+
+        image = self.image_transform(image)
+
+        for i in range(num_class):
+            mask_images[i] = self.image_transform(mask_images[i])
+
+        num_pad = self.max_classes - num_class
+        pad_images = [torch.zeros_like(image) for _ in range(num_pad)]
+        
+        all_masks = mask_images + pad_images
+        all_masks = torch.stack(all_masks)
 
         tgt_text_seq = torch.from_numpy(tgt_text_seq).long()
 
-        return index, image, tgt_mask, tgt_text_seq, tgt_text_len, ctx_masks, num_class
+        return index, image, all_masks, tgt_text_seq, tgt_text_len, label, num_class
 
 
 if __name__ == "__main__":
