@@ -247,6 +247,7 @@ class CocoInContext(data.Dataset):
 
     def __getitem__(self, index):
         image = self.images[index]
+        breakpoint()
         ctx_indices = self.image2index[image]
         ctx_indices.remove(index)  # do not include this in context indices
 

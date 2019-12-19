@@ -41,6 +41,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     def run_model(nlp_model):
+        print(f'Starting extraction for {nlp_model}')
         model_class, tokenizer_class, pretrained_weights = MODELS[nlp_model]
         # load pretrained model/tokenizer
         tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
