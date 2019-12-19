@@ -256,7 +256,7 @@ class TrainAgent(BaseAgent):
             DatasetClass = CocoInContext
         else:
             raise Exception(f'Dataset {self.config.dataset} not supported.')
-        
+       
         train_dataset = DatasetClass(
             os.path.join(self.config.data_dir, self.config.dataset),
             data_size = self.config.data.data_size,

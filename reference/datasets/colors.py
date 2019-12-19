@@ -44,6 +44,9 @@ class ColorsInContext(data.Dataset):
         super().__init__()
         assert context_condition in ['all', 'far', 'close']
 
+        if image_size is None:
+            image_size = 64
+
         if data_size is not None:
             assert data_size > 0
             assert data_size <= 1
