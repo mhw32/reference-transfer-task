@@ -190,7 +190,7 @@ class CocoInContext(data.Dataset):
             image = images_clean[i]
             image2index[image].append(i)
 
-        print('Computing statstics')
+        print('Computing statistics')
         max_obs_obj = 0
         for image, objs in image2index.items():
             if len(objs) > max_obs_obj:
@@ -301,8 +301,8 @@ class CocoInContext(data.Dataset):
         all_masks = torch.stack(all_masks)
 
         tgt_text_seq = torch.from_numpy(tgt_text_seq).long()
+        tgt_text_len = len(tgt_text_len)
 
-        breakpoint()
         return index, image, all_masks, tgt_text_seq, tgt_text_len, label, num_class
 
 
