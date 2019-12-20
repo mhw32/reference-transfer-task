@@ -21,6 +21,7 @@ from reference.utils import AverageMeter
 from reference.setup import print_cuda_statistics
 from reference.datasets.chairs import ChairsInContext
 from reference.datasets.colors import ColorsInContext
+from reference.datasets.colorgrids import ColorgridsInContext
 from reference.datasets.refcoco import CocoInContext
 from reference.models import Witness
 
@@ -252,6 +253,8 @@ class TrainAgent(BaseAgent):
             DatasetClass = ChairsInContext
         elif self.config.dataset == 'colors_in_context':
             DatasetClass = ColorsInContext
+        elif self.config.dataset == 'colorgrids_in_context':
+            DatasetClass = ColorgridsInContext
         elif self.config.dataset in ['refclef', 'refcoco', 'refcoco+']: 
             DatasetClass = CocoInContext
         else:
@@ -603,6 +606,8 @@ class EvaluateAgent(object):
             DatasetClass = ChairsInContext
         elif self.config.dataset == 'colors_in_context':
             DatasetClass = ColorsInContext
+        elif self.config.dataset == 'colorgrids_in_context':
+            DatasetClass = ColorgridsInContext
         elif self.config.dataset in ['refclef', 'refcoco', 'refcoco+']: 
             DatasetClass = CocoInContext
         else:
@@ -777,6 +782,8 @@ class FeatureAgent(object):
             DatasetClass = ChairsInContext
         elif self.dataset == 'colors_in_context':
             DatasetClass = ColorsInContext
+        elif self.dataset == 'colorgrids_in_context':
+            DatasetClass = ColorgridsInContext
         elif self.dataset in ['refclef', 'refcoco', 'refcoco+']: 
             DatasetClass = CocoInContext
         else:

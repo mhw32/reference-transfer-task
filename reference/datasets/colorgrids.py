@@ -318,3 +318,8 @@ class ColorgridsInContext(data.Dataset):
         text_len = self.text_len[index]
 
         return index, image1, image2, image3, text_seq, text_len, label
+
+
+if __name__ == "__main__":
+    dataset = ColorgridsInContext('/mnt/fs5/wumike/datasets/colorgrids_in_context')
+    dataset.__getitem__(0)
