@@ -20,6 +20,7 @@ from reference.text_utils import (
     UNK_TOKEN,
 )
 from reference.utils import OrderedCounter
+from reference.datasets.colors import clean_tokens
 
 
 class ColorgridsInContext(data.Dataset):
@@ -102,7 +103,7 @@ class ColorgridsInContext(data.Dataset):
                 images2 = cache['images2']
                 images3 = cache['images3']
                 labels = cache['labels']
-            
+
         data = list(zip(texts, images1, images2, images3, labels))
         data = self._process_splits(data)
 
@@ -160,10 +161,30 @@ class ColorgridsInContext(data.Dataset):
 
         text_all, image1_all, image2_all, image3_all, labels_all = [], [], [], [], []
 
+        print('Pruning data.')
         for records in data:
             records = records['records']
             for rounds in records:
-                nlp_event, image_event, action_event = rounds['events']
+
+                utterances = []
+                image_event = None
+                action_event = None
+                            
+                for event in rounds['events']:
+                    if event['eventType'] == 'utterance':
+                        # only take things that the speaker said
+                        if event['sender'] != 'speaker':
+                            continue
+                        utterances.append(event['contents'])
+
+                    elif event['eventType'] == 'action':
+                        assert action_event is None
+                        action_event = event
+
+                    elif event['eventType'] == 'state':
+                        assert image_event is None
+                        image_event = event
+
                 listener_choice = action_event['action']['lClicked']
                 correct_choice = image_event['state']['target']
                 
@@ -175,7 +196,7 @@ class ColorgridsInContext(data.Dataset):
                     if condition != context_condition:
                         continue
                 
-                text = nlp_event['contents']
+                text = ' '.join(utterances) 
                 images = image_event['state']['objs']
 
                 def construct_image(image):
@@ -225,7 +246,8 @@ class ColorgridsInContext(data.Dataset):
 
         pbar = tqdm(total=len(texts))
         for text in texts:
-            tokens = word_tokenize(text)
+            tokens = word_tokenize(text.lower())
+            tokens = clean_tokens(tokens)
             w2c.update(tokens)
             pbar.update()
         pbar.close()
@@ -244,7 +266,8 @@ class ColorgridsInContext(data.Dataset):
         text_seq, text_len, raw_tokens = [], [], []
 
         for i in range(len(text)):
-            _tokens = word_tokenize(text[i])
+            _tokens = word_tokenize(text[i].lower())
+            _tokens = clean_tokens(_tokens)
             
             tokens = [SOS_TOKEN] + _tokens[:self.max_sent_len] + [EOS_TOKEN]
             length = len(tokens)
@@ -293,7 +316,7 @@ class ColorgridsInContext(data.Dataset):
         r1 = np.concatenate((p11, p12, p13), axis=1)
         r2 = np.concatenate((p21, p22, p23), axis=1)
         r3 = np.concatenate((p31, p32, p33), axis=1)
-        image = np.concatenate((r1, r2, r3), dim=0)
+        image = np.concatenate((r1, r2, r3), axis=0)
 
         return Image.fromarray(image.astype('uint8'))
 
@@ -310,6 +333,10 @@ class ColorgridsInContext(data.Dataset):
         image2 = self._make_image_from_coords(image2)
         image3 = self._make_image_from_coords(image3)
 
+        image1.save('tmp1.png')
+        image2.save('tmp2.png')
+        image3.save('tmp3.png')
+
         image1 = self.image_transform(image1)
         image2 = self.image_transform(image2)
         image3 = self.image_transform(image3)
@@ -322,4 +349,5 @@ class ColorgridsInContext(data.Dataset):
 
 if __name__ == "__main__":
     dataset = ColorgridsInContext('/mnt/fs5/wumike/datasets/colorgrids_in_context')
-    dataset.__getitem__(0)
+    print(dataset.__getitem__(10)[-1])
+    print(dataset.__gettext__(10))
