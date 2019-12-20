@@ -20,7 +20,7 @@ from reference.text_utils import (
     UNK_TOKEN,
 )
 from reference.utils import OrderedCounter
-from reference.datasets.colors import clean_tokens
+from reference.datasets.colors import clean_tokens, hsl2rgb
 
 
 class ColorgridsInContext(data.Dataset):
@@ -288,6 +288,27 @@ class ColorgridsInContext(data.Dataset):
         p21, p22, p23 = coords[1]
         p31, p32, p33 = coords[2]
 
+        # convert hsl to rgb
+        p11 = np.array(list(hsl2rgb(p11[0], p11[1] / 100., p11[2] / 100.)))
+        p12 = np.array(list(hsl2rgb(p12[0], p12[1] / 100., p12[2] / 100.)))
+        p13 = np.array(list(hsl2rgb(p13[0], p13[1] / 100., p13[2] / 100.)))
+        p21 = np.array(list(hsl2rgb(p21[0], p21[1] / 100., p21[2] / 100.)))
+        p22 = np.array(list(hsl2rgb(p22[0], p22[1] / 100., p22[2] / 100.)))
+        p23 = np.array(list(hsl2rgb(p23[0], p23[1] / 100., p23[2] / 100.)))
+        p31 = np.array(list(hsl2rgb(p31[0], p31[1] / 100., p31[2] / 100.)))
+        p32 = np.array(list(hsl2rgb(p32[0], p32[1] / 100., p32[2] / 100.)))
+        p33 = np.array(list(hsl2rgb(p33[0], p33[1] / 100., p33[2] / 100.)))
+
+        # p11 = p11[np.newaxis, np.newaxis, :]
+        # p12 = p12[np.newaxis, np.newaxis, :]
+        # p13 = p13[np.newaxis, np.newaxis, :]
+        # p21 = p21[np.newaxis, np.newaxis, :]
+        # p22 = p22[np.newaxis, np.newaxis, :]
+        # p23 = p23[np.newaxis, np.newaxis, :]
+        # p31 = p31[np.newaxis, np.newaxis, :]
+        # p32 = p32[np.newaxis, np.newaxis, :]
+        # p33 = p33[np.newaxis, np.newaxis, :]
+
         size1 = self.image_size // 3
         size3 = self.image_size // 3
         size2 = self.image_size - size1 - size3
@@ -327,15 +348,11 @@ class ColorgridsInContext(data.Dataset):
         return self.text_raw[index]
 
     def __getitem__(self, index):
-        _, image1, image2, image3, label = self.data[index]
+        raw_text, _image1, _image2, _image3, label = self.data[index]
 
-        image1 = self._make_image_from_coords(image1)
-        image2 = self._make_image_from_coords(image2)
-        image3 = self._make_image_from_coords(image3)
-
-        image1.save('tmp1.png')
-        image2.save('tmp2.png')
-        image3.save('tmp3.png')
+        image1 = self._make_image_from_coords(_image1)
+        image2 = self._make_image_from_coords(_image2)
+        image3 = self._make_image_from_coords(_image3)
 
         image1 = self.image_transform(image1)
         image2 = self.image_transform(image2)
@@ -349,5 +366,5 @@ class ColorgridsInContext(data.Dataset):
 
 if __name__ == "__main__":
     dataset = ColorgridsInContext('/mnt/fs5/wumike/datasets/colorgrids_in_context')
-    print(dataset.__getitem__(10)[-1])
-    print(dataset.__gettext__(10))
+    print(dataset.__getitem__(25)[-1])
+    print(dataset.__gettext__(25))
