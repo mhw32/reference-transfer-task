@@ -37,7 +37,7 @@ class ColorgridsInContext(data.Dataset):
             val_frac = 0.16,
             image_transform = None,
             min_token_occ = 2,
-            max_sent_len = 33,
+            max_sent_len = 60,
             random_seed = 42,
             **kwargs
         ):

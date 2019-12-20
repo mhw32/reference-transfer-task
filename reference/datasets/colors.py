@@ -36,7 +36,7 @@ class ColorsInContext(data.Dataset):
             val_frac = 0.16,
             image_transform = None,
             min_token_occ = 2,
-            max_sent_len = 33,
+            max_sent_len = 16,
             random_seed = 42,
             **kwargs
         ):
@@ -395,3 +395,8 @@ def clean_tokens(tokens):
         tokens.remove('')
     
     return tokens
+
+
+if __name__ == "__main__":
+    dataset = ColorsInContext('/mnt/fs5/wumike/datasets/colors_in_context')
+    dataset.__getitem__(0)
