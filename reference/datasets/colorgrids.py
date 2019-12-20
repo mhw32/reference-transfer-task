@@ -260,7 +260,44 @@ class ColorgridsInContext(data.Dataset):
 
         return text_seq, text_len, raw_tokens
 
-     def __len__(self):
+    def _make_image_from_coords(self, coords):
+        p11, p12, p13 = coords[0]
+        p21, p22, p23 = coords[1]
+        p31, p32, p33 = coords[2]
+
+        size1 = self.image_size // 3
+        size3 = self.image_size // 3
+        size2 = self.image_size - size1 - size3
+
+        p11 = p11[np.newaxis, np.newaxis, :]
+        p11 = p11.repeat(size1, 0).repeat(size1, 1)
+        p12 = p12[np.newaxis, np.newaxis, :]
+        p12 = p12.repeat(size1, 0).repeat(size2, 1)
+        p13 = p13[np.newaxis, np.newaxis, :]
+        p13 = p13.repeat(size1, 0).repeat(size3, 1)
+
+        p21 = p21[np.newaxis, np.newaxis, :]
+        p21 = p21.repeat(size2, 0).repeat(size1, 1)
+        p22 = p22[np.newaxis, np.newaxis, :]
+        p22 = p22.repeat(size2, 0).repeat(size2, 1)
+        p23 = p23[np.newaxis, np.newaxis, :]
+        p23 = p23.repeat(size2, 0).repeat(size3, 1)
+
+        p31 = p31[np.newaxis, np.newaxis, :]
+        p31 = p31.repeat(size3, 0).repeat(size1, 1)
+        p32 = p32[np.newaxis, np.newaxis, :]
+        p32 = p32.repeat(size3, 0).repeat(size2, 1)
+        p33 = p33[np.newaxis, np.newaxis, :]
+        p33 = p33.repeat(size3, 0).repeat(size3, 1)
+
+        r1 = np.concatenate((p11, p12, p13), axis=1)
+        r2 = np.concatenate((p21, p22, p23), axis=1)
+        r3 = np.concatenate((p31, p32, p33), axis=1)
+        image = np.concatenate((r1, r2, r3), dim=0)
+
+        return Image.fromarray(image.astype('uint8'))
+
+    def __len__(self):
         return len(self.data)
     
     def __gettext__(self, index):
@@ -269,9 +306,15 @@ class ColorgridsInContext(data.Dataset):
     def __getitem__(self, index):
         _, image1, image2, image3, label = self.data[index]
 
-        # TODO: make image1,2,3 into real images.
+        image1 = self._make_image_from_coords(image1)
+        image2 = self._make_image_from_coords(image2)
+        image3 = self._make_image_from_coords(image3)
+
+        image1 = self.image_transform(image1)
+        image2 = self.image_transform(image2)
+        image3 = self.image_transform(image3)
 
         text_seq = torch.from_numpy(self.text_seq[index]).long()
         text_len = self.text_len[index]
 
-        return index, text_seq, text_len, label
+        return index, image1, image2, image3, text_seq, text_len, label
