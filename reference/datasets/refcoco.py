@@ -52,10 +52,11 @@ class CocoInContext(data.Dataset):
         data_root = os.path.dirname(data_dir)
         data_name = os.path.basename(data_dir)
         if data_name == 'refclef':
-            image_dirname = 'mscoco/images/train2014'
-        else:
             image_dirname = 'saiapr_tc-1'
-        image_dir = os.path.join(data_root, 'images', image_dirname)
+        else:
+            image_dirname = 'mscoco/images/train2014'
+        image_dir = os.path.join(
+            os.path.dirname(data_root), 'images', image_dirname)
 
         if data_size is not None:
             assert data_size > 0
@@ -189,7 +190,7 @@ class CocoInContext(data.Dataset):
             image = images_clean[i]
             image2index[image].append(i)
 
-        print('Computing statstics')
+        print('Computing statistics')
         max_obs_obj = 0
         for image, objs in image2index.items():
             if len(objs) > max_obs_obj:
@@ -228,23 +229,17 @@ class CocoInContext(data.Dataset):
         text_seq, text_len, raw_tokens = [], [], []
 
         for i in range(len(text)):
-            sent_seqs, sent_lens, sent_tokens = [], [], []
 
-            sents = text[i]
-            for sent in sents:
-                _tokens = [tok.lower() for tok in sent]
-                tokens = [SOS_TOKEN] + _tokens[:self.max_sent_len] + [EOS_TOKEN]
-                length = len(tokens)
-                tokens.extend([PAD_TOKEN] * (self.max_sent_len + 2 - length))
-                tokens = [self.w2i.get(token, self.w2i[UNK_TOKEN]) for token in tokens]
+            sent = text[i]
+            _tokens = [tok.lower() for tok in sent]
+            tokens = [SOS_TOKEN] + _tokens[:self.max_sent_len] + [EOS_TOKEN]
+            length = len(tokens)
+            tokens.extend([PAD_TOKEN] * (self.max_sent_len + 2 - length))
+            tokens = [self.w2i.get(token, self.w2i[UNK_TOKEN]) for token in tokens]
 
-                sent_seqs.append(tokens)
-                sent_lens.append(length)
-                sent_tokens.append(_tokens)
-            
-            text_seq.append(sent_seqs)
-            text_len.append(sent_lens)
-            raw_tokens.append(sent_tokens)
+            text_seq.append(tokens)
+            text_len.append(length)
+            raw_tokens.append(_tokens)
 
         return text_seq, text_len, raw_tokens
 
@@ -306,6 +301,7 @@ class CocoInContext(data.Dataset):
         all_masks = torch.stack(all_masks)
 
         tgt_text_seq = torch.from_numpy(tgt_text_seq).long()
+        tgt_text_len = len(tgt_text_len)
 
         return index, image, all_masks, tgt_text_seq, tgt_text_len, label, num_class
 
