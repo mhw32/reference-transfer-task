@@ -52,7 +52,6 @@ class ColorsInContext(data.Dataset):
             assert data_size <= 1
 
         self.data_dir = data_dir
-        self.image_dir = os.path.join(self.data_dir, 'images')
         self.cache_dir = os.path.join(self.data_dir, 'cache')
         self.data_size = data_size
         self.image_size = image_size
@@ -74,9 +73,6 @@ class ColorsInContext(data.Dataset):
             ])
         else:
             self.image_transform = image_transform
-
-        if not os.path.isdir(self.image_dir):
-            os.makedirs(self.image_dir)
 
         if not os.path.isdir(self.cache_dir):
             os.makedirs(self.cache_dir)
