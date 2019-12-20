@@ -47,7 +47,7 @@ if __name__ == "__main__":
     cuda_str = '--cuda' if args.cuda else ''
     
     def make_command(name):
-        if name == 'huggingface':
+        if name == 'huggingface.py':
             extra = '--all'
         else:
             extra = ''
