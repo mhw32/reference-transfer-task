@@ -157,26 +157,23 @@ def build_config(
         }
     }
 
-    return json.dumps(config_dict)
+    return config_dict 
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('dataset', type=str, choices=['chairs_in_context', 'colors_in_context'])
+    parser.add_argument('dataset', type=str, choices=['chairs_in_context', 'colors_in_context', 'colorgrids_in_context'])
     parser.add_argument('--data-size', default=None)
     parser.add_argument('--gpu-device', type=int, default=0)
     parser.add_argument('--cuda', action='store_true', default=False)
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--image-only', action='store_true', default=False,
-                        description='Only vary image embeddings (train text from scratch)')
-    parser.add_argument('--text-only', action='store_true', default=False,
-                        description='Only vary text embeddings (train image from scratch)')
-    parser.add_argument('--multimodal-only', action='store_true', default=False,
-                        description='Only train the multimodal models (3 total)')
+    parser.add_argument('--image-only', action='store_true', default=False)
+    parser.add_argument('--text-only', action='store_true', default=False)
+    parser.add_argument('--multimodal-only', action='store_true', default=False)
     args = parser.parse_args()
 
-    exp_base = '/mnt/fs5/wumike/reference/trained_models/12_19'
+    exp_base = '/mnt/fs5/wumike/reference/trained_models/12_22'
     data_dir = '/mnt/fs5/wumike/datasets'
 
     if args.text_only or args.multimodal_only:
@@ -196,7 +193,7 @@ if __name__ == "__main__":
 
     for image_model in image_models:
         for text_model in language_models:
-            exp_name = f'{image_model}_{text_model}'
+            exp_name = f'{args.dataset}_{image_model}_{text_model}_size{args.data_size}_seed{args.seed}'
             
             if image_model == 'vanilla':
                 pretrain_image_embedding_dir = None
