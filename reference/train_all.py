@@ -177,12 +177,12 @@ if __name__ == "__main__":
     data_dir = '/mnt/fs5/wumike/datasets'
 
     if args.text_only or args.multimodal_only:
-        image_models = []
+        image_models = ['vanilla']
     else:
         image_models = IMAGE_MODELS
 
     if args.image_only or args.multimodal_only:
-        language_models = []
+        language_models = ['vanilla']
     else:
         language_models = LANGUAGE_MODELS
 
