@@ -322,3 +322,8 @@ class ChairsInContext(data.Dataset):
         text_len = self.text_len[index]
 
         return index, chair_a_pt, chair_b_pt, chair_c_pt, text_seq, text_len, label
+
+
+if __name__ == "__main__":
+    dataset = ChairsInContext('/mnt/fs5/wumike/datasets/chairs_in_context')
+    dataset.__getitem__(0)
