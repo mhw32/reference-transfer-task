@@ -153,7 +153,7 @@ def build_config(
             "momentum": 0.9,
             "weight_decay": 0,
             "patience": 10,
-            "epochs": 1
+            "epochs": 100
         }
     }
 
