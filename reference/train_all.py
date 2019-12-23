@@ -238,7 +238,7 @@ if __name__ == "__main__":
             exp_name,
             args.dataset,
             data_dir,
-            data_size = None,
+            data_size = args.data_size,
             context_condition = 'all',
             split_mode = 'easy',
             pretrain_image_embedding_dir = pretrain_image_embedding_dir,
