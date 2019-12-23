@@ -173,11 +173,7 @@ class TrainAgent(BaseAgent):
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
             
-            pretrain_image_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_image_embedding_dir,
-            )
+            pretrain_image_embedding_path = self.config.pretrain_image_embedding_dir
 
             train_image_a_embedding_file = os.path.join(
                 pretrain_image_embedding_path, 
@@ -223,12 +219,8 @@ class TrainAgent(BaseAgent):
 
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
-
-            pretrain_text_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_text_embedding_dir,
-            )
+            
+            pretrain_text_embedding_path = self.config.pretrain_text_embedding_dir
 
             train_embedding_file = os.path.join(
                 pretrain_text_embedding_path,
@@ -561,11 +553,7 @@ class EvaluateAgent(object):
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
 
-            pretrain_image_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_image_embedding_dir,
-            )
+            pretrain_image_embedding_path = self.config.pretrain_image_embedding_dir
             
             test_image_a_embedding_file = os.path.join(
                 pretrain_image_embedding_path,
@@ -587,11 +575,7 @@ class EvaluateAgent(object):
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
 
-            pretrain_text_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_text_embedding_dir,
-            )
+            pretrain_text_embedding_path = self.config.pretrain_text_embedding_dir
 
             test_embedding_file = os.path.join(
                 pretrain_text_embedding_path,
@@ -945,11 +929,7 @@ class MaskedTrainAgent(TrainAgent):
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
             
-            pretrain_image_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_image_embedding_dir,
-            )
+            pretrain_image_embedding_path = self.config.pretrain_image_embedding_dir
 
             train_full_image_embedding_file = os.path.join(
                 pretrain_image_embedding_path, 
@@ -985,11 +965,7 @@ class MaskedTrainAgent(TrainAgent):
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
 
-            pretrain_text_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_text_embedding_dir,
-            )
+            pretrain_text_embedding_path = self.config.pretrain_text_embedding_dir
 
             train_embedding_file = os.path.join(
                 pretrain_text_embedding_path,
@@ -1208,11 +1184,7 @@ class MaskedEvaluateAgent(EvaluateAgent):
         if not self.config.train_image_from_scratch:
             assert self.config.pretrain_image_embedding_dir is not None
 
-            pretrain_image_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_image_embedding_dir,
-            )
+            pretrain_image_embedding_path = self.config.pretrain_image_embedding_dir
             
             test_full_image_embedding_file = os.path.join(
                 pretrain_image_embedding_path,
@@ -1229,11 +1201,7 @@ class MaskedEvaluateAgent(EvaluateAgent):
         if not self.config.train_text_from_scratch:
             assert self.config.pretrain_text_embedding_dir is not None
 
-            pretrain_text_embedding_path = os.path.join(
-                self.config.pretrain_root,
-                self.config.dataset,
-                self.config.pretrain_text_embedding_dir,
-            )
+            pretrain_text_embedding_path = self.config.pretrain_text_embedding_dir
 
             test_embedding_file = os.path.join(
                 pretrain_text_embedding_path,

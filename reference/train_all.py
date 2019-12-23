@@ -153,7 +153,7 @@ def build_config(
             "momentum": 0.9,
             "weight_decay": 0,
             "patience": 10,
-            "epochs": 100
+            "epochs": 1
         }
     }
 
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     for image_model in image_models:
         for text_model in language_models:
             exp_name = f'{args.dataset}_{image_model}_{text_model}_size{args.data_size}_seed{args.seed}'
-            
+           
             if image_model == 'vanilla':
                 pretrain_image_embedding_dir = None
             else:
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                 pretrain_text_embedding_dir = None
             else:
                 pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{text_model}'
-                
+               
             config_dict = build_config(
                 exp_base, 
                 exp_name,
@@ -230,15 +230,8 @@ if __name__ == "__main__":
     for multimodal_model in multimodal_models:
         exp_name = f'{multimodal_model}'
 
-        if image_model == 'vanilla':
-            pretrain_image_embedding_dir = None
-        else:
-            pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_image'
-        
-        if text_model == 'vanilla':
-            pretrain_text_embedding_dir = None
-        else:
-            pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_text'
+        pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_image'
+        pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_text'
             
         config_dict = build_config(
             exp_base, 
