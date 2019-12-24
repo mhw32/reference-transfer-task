@@ -176,10 +176,14 @@ if __name__ == "__main__":
     exp_base = '/mnt/fs5/wumike/reference/trained_models/12_22'
     data_dir = '/mnt/fs5/wumike/datasets'
 
+    if args.data_size is not None:
+        args.data_size = float(args.data_size)
+
     if args.text_only or args.multimodal_only:
         image_models = ['vanilla']
     else:
         image_models = IMAGE_MODELS
+        # image_models = image_models[1:]
 
     if args.image_only or args.multimodal_only:
         language_models = ['vanilla']
