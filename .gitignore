@@ -2,3 +2,7 @@
 data/
 notebooks/
 **/trained_models/
+**.aux
+**.log
+**.pdf
+**.out
