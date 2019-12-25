@@ -27,9 +27,8 @@ if __name__ == "__main__":
     for exp_folder in exp_folders:
         exp_full_folder = os.path.join(exp_base, 'experiments', exp_folder)
         exp_date_folder = os.listdir(exp_full_folder)
-        assert len(exp_date_folder) == 1
-        exp_date_folder = exp_date_folder[0]
-        checkpoint_dir = os.path.join(exp_full_folder, exp_date_folder, 'checkpoints')
+        exp_date_folder = exp_date_folder[-1]
+        checkpoint_dir = os.path.join(exp_full_folder, exp_date_folder)
         checkpoint_name = 'model_best.pth.tar'
 
         eval_model(checkpoint_dir, checkpoint_name)
