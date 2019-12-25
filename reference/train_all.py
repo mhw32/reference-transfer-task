@@ -176,10 +176,14 @@ if __name__ == "__main__":
     exp_base = '/mnt/fs5/wumike/reference/trained_models/12_22'
     data_dir = '/mnt/fs5/wumike/datasets'
 
+    if args.data_size is not None:
+        args.data_size = float(args.data_size)
+
     if args.text_only or args.multimodal_only:
         image_models = ['vanilla']
     else:
         image_models = IMAGE_MODELS
+        # image_models = image_models[1:]
 
     if args.image_only or args.multimodal_only:
         language_models = ['vanilla']
@@ -194,7 +198,7 @@ if __name__ == "__main__":
     for image_model in image_models:
         for text_model in language_models:
             exp_name = f'{args.dataset}_{image_model}_{text_model}_size{args.data_size}_seed{args.seed}'
-            
+           
             if image_model == 'vanilla':
                 pretrain_image_embedding_dir = None
             else:
@@ -204,7 +208,7 @@ if __name__ == "__main__":
                 pretrain_text_embedding_dir = None
             else:
                 pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{text_model}'
-                
+               
             config_dict = build_config(
                 exp_base, 
                 exp_name,
@@ -230,22 +234,15 @@ if __name__ == "__main__":
     for multimodal_model in multimodal_models:
         exp_name = f'{multimodal_model}'
 
-        if image_model == 'vanilla':
-            pretrain_image_embedding_dir = None
-        else:
-            pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_image'
-        
-        if text_model == 'vanilla':
-            pretrain_text_embedding_dir = None
-        else:
-            pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_text'
+        pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_image'
+        pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{multimodal_model}_text'
             
         config_dict = build_config(
             exp_base, 
             exp_name,
             args.dataset,
             data_dir,
-            data_size = None,
+            data_size = args.data_size,
             context_condition = 'all',
             split_mode = 'easy',
             pretrain_image_embedding_dir = pretrain_image_embedding_dir,

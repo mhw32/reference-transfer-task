@@ -113,7 +113,7 @@ class ColorgridsInContext(data.Dataset):
             indices = np.arange(n_train_total)
             n_train_total = int(math.ceil(data_size * n_train_total))
             indices = rs.choice(indices, size=n_train_total)
-            data = data[indices]
+            data = [data[index] for index in indices]
 
             self.subset_indices = indices
 
