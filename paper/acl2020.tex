@@ -56,6 +56,11 @@ TODO
 \bibliography{anthology,acl2020}
 \bibliographystyle{acl_natbib}
 
+\appendix
+
+\section{Appendices}
+\label{sec:appendix}
+
 \begin{table*}[t!]
 \centering
 \begin{tabular}{lcccccc}
@@ -83,52 +88,27 @@ RoBERTa & & & & & & \\
 
 \begin{table*}[t!]
 \centering
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccc}
 \hline
-\textbf{Model} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} & \textbf{5\%} & \textbf{1\%} \\
+\textbf{Model} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} \\
 \hline
-RNN & & & & & & \\
-GloVe & & & & & & \\
-Word2Vec & & & & & & \\
-SkipThought & & & & & & \\
-InferSent & & & & & & \\
-BERT & & & & & & \\
-GPT (OpenAI) & & & & & & \\
-GPT2 & & & & & & \\
-CTRL & & & & & & \\
-Transformer-XL & & & & & & \\
-XLNet & & & & & & \\
-XLM & & & & & & \\
-DistilBERT & & & & & & \\
-RoBERTa & & & & & & \\
+RNN & & & & \\
+GloVe & & & & \\
+Word2Vec & & & & \\
+SkipThought & & & & \\
+InferSent & & & & \\
+BERT & & & & \\
+GPT (OpenAI) & & & & \\
+GPT2 & & & & \\
+CTRL & & & & \\
+Transformer-XL & & & & \\
+XLNet & & & & \\
+XLM & & & & \\
+DistilBERT & & & & \\
+RoBERTa & & & & \\
 \hline
 \end{tabular}
 \caption{\label{table:colors} Evaluation of several language representations on the ColorGrids in Context dataset.}
-\end{table*}
-
-\begin{table*}[t!]
-\centering
-\begin{tabular}{llcccccc}
-\hline
-\textbf{Model} & \textbf{Text} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} & \textbf{5\%} & \textbf{1\%} \\
-\hline
-Vanilla & RNN & & & & & & \\
-Vanilla & GloVe & & & & & & \\
-Vanilla & Word2Vec & & & & & & \\
-Vanilla & SkipThought & & & & & & \\
-Vanilla & InferSent & & & & & & \\
-Vanilla & BERT & & & & & & \\
-Vanilla & GPT (OpenAI) & & & & & & \\
-Vanilla & GPT2 & & & & & & \\
-Vanilla & CTRL & & & & & & \\
-Vanilla & Transformer-XL & & & & & & \\
-Vanilla & XLNet & & & & & & \\
-Vanilla & XLM & & & & & & \\
-Vanilla & DistilBERT & & & & & & \\
-Vanilla & RoBERTa & & & & & & \\
-\hline
-\end{tabular}
-\caption{\label{table:colors} Evaluation of several multimodal representations on the Chairs in Context dataset.}
 \end{table*}
 
 \begin{table*}[t!]
@@ -181,7 +161,7 @@ ResNet34 & DistilBERT & & & & & & \\
 ResNet34 & RoBERTa & & & & & & \\
 \hline
 \end{tabular}
-\caption{\label{table:colors} Evaluation of several multimodal representations on the Chairs in Context dataset.}
+\caption{\label{table:colors} Evaluation (Part 1 of 2) of several multimodal representations on the Chairs in Context dataset.}
 \end{table*}
 
 \begin{table*}[t!]
@@ -232,31 +212,12 @@ VAE (COCO) & XLNet & & & & & & \\
 VAE (COCO) & XLM & & & & & & \\
 VAE (COCO) & DistilBERT & & & & & & \\
 VAE (COCO) & RoBERTa & & & & & & \\
-\hline
-\end{tabular}
-\caption{\label{table:colors} Evaluation of several multimodal representations on the Chairs in Context dataset.}
-\end{table*}
-
-\begin{table*}[t!]
-\centering
-\begin{tabular}{llcccccc}
-\hline
-\textbf{Model} & \textbf{Text} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} & \textbf{5\%} & \textbf{1\%} \\
-\hline
 IR (COCO) & IR (COCO) & & & & & & \\
 VAEVAE (COCO) & VAEVAE (COCO) & & & & & & \\
 VAEGAN (COCO) & VAEGAN (COCO) & & & & & & \\
 \hline
 \end{tabular}
-\caption{\label{table:colors} Evaluation of several multimodal representations on the Chairs in Context dataset.}
+\caption{\label{table:colors} Evaluation (Part 2 of 2) of several multimodal representations on the Chairs in Context dataset.}
 \end{table*}
-
-\appendix
-
-\section{Appendices}
-\label{sec:appendix}
-
-\section{Supplemental Material}
-\label{sec:supplemental}
 
 \end{document}
