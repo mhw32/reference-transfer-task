@@ -100,6 +100,7 @@ def build_config(
         data_size = None,
         context_condition = 'all',
         split_mode = 'easy',
+        sneak_peak = False,
         pretrain_image_embedding_dir = None,
         pretrain_text_embedding_dir = None,
         pretrain_image_dim = None,
@@ -141,7 +142,7 @@ def build_config(
                 "n_gru_hidden": 128,
                 "gru_bidirectional": False,
                 "n_gru_layers": 1,
-                "sneak_peak": False
+                "sneak_peak": sneak_peak
             }
         },
         "optim": {
