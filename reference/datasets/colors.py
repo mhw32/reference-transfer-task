@@ -399,4 +399,5 @@ def clean_tokens(tokens):
 
 if __name__ == "__main__":
     dataset = ColorsInContext('/mnt/fs5/wumike/datasets/colors_in_context')
+    print(len(dataset))
     dataset.__getitem__(0)

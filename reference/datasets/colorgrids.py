@@ -366,5 +366,6 @@ class ColorgridsInContext(data.Dataset):
 
 if __name__ == "__main__":
     dataset = ColorgridsInContext('/mnt/fs5/wumike/datasets/colorgrids_in_context')
+    print(len(dataset))
     print(dataset.__getitem__(25)[-1])
     print(dataset.__gettext__(25))
