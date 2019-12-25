@@ -67,20 +67,21 @@ TODO
 \hline
 \textbf{Model} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} & \textbf{5\%} & \textbf{1\%} \\
 \hline
-RNN & & & & & & \\
-GloVe & & & & & & \\
-Word2Vec & & & & & & \\
-SkipThought & & & & & & \\
-InferSent & & & & & & \\
-BERT & & & & & & \\
-GPT (OpenAI) & & & & & & \\
-GPT2 & & & & & & \\
-CTRL & & & & & & \\
-Transformer-XL & & & & & & \\
-XLNet & & & & & & \\
-XLM & & & & & & \\
-DistilBERT & & & & & & \\
-RoBERTa & & & & & & \\
+RNN & $\mathbf{86.08}$ & $\mathbf{83.60}$ & $81.72$ & $77.57$ & $75.35$ & $60.59$ \\
+RNN+ & & & & & & \\
+GloVe & $83.81$ & $82.78$ & $81.87$ & $\mathbf{79.45}$ & $\mathbf{77.03}$ & $56.74$ \\
+Word2Vec & $83.81$ & $82.13$ & $81.78$ & $79.43$ & $71.23$ & $56.33$ \\
+SkipThought & $82.39$ & $79.15$ & $79.00$ & $75.44$ & $69.76$ & $56.75$ \\
+InferSent & $85.95$ & $83.19$ & $\mathbf{82.75}$ & $75.93$ & $74.03$ & $57.16$ \\
+BERT & $83.21$ & $80.94$ & $78.74$ & $73.99$ & $66.54$ & $54.31$ \\
+GPT (OpenAI) & $82.86$ & $79.62$ & $75.93$ & $69.33$ & $66.24$ & $48.74$ \\
+GPT2 & $84.22$ & $80.85$ & $79.30$ & $75.44$ & $63.22$ & $53.64$ \\
+CTRL & $83.62$ & $82.52$ & $81.48$ & $78.42$ & $76.43$ & $\mathbf{63.29}$ \\
+Transformer-XL & $83.21$ & $80.98$ & $78.59$ & $75.91$ & $72.33$ & $54.61$ \\
+XLNet & $80.98$ & $79.24$ & $78.07$ & $73.80$ & $67.04$ & $57.08$ \\
+XLM & $80.01$ & $76.54$ & $72.83$ & $70.86$ & $60.20$ & $50.72$ \\
+DistilBERT & $83.49$ & $81.93$ & $81.01$ & $75.16$ & $71.83$ & $57.48$ \\
+RoBERTa & $83.68$ & $80.03$ & $79.04$ & $69.74$ & $63.87$ & $52.45$ \\
 \hline
 \end{tabular}
 \caption{\label{table:colors} Evaluation of several language representations on the Colors in Context dataset. We vary the amount of training data used in transfer learning from 100\% (30k examples) to 1\% (300 examples).}
