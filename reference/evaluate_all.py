@@ -25,10 +25,21 @@ if __name__ == "__main__":
     exp_folders = [exp_folder for exp_folder in exp_folders if args.dataset in exp_folder]
 
     for exp_folder in exp_folders:
-        exp_full_folder = os.path.join(exp_base, 'experiments', exp_folder)
-        exp_date_folder = os.listdir(exp_full_folder)
-        exp_date_folder = exp_date_folder[-1]
-        checkpoint_dir = os.path.join(exp_full_folder, exp_date_folder)
-        checkpoint_name = 'model_best.pth.tar'
+        if 'huggingface' in exp_folder:
+            sub_exp_folders = os.listdir(os.path.join(exp_base, 'experiments', exp_folder))
+            for sub_exp_folder in sub_exp_folders:
+                exp_full_folder = os.path.join(exp_base, 'experiments', exp_folder, sub_exp_folder)
+                exp_date_folder = sorted(os.listdir(exp_full_folder))
+                exp_date_folder = exp_date_folder[-1]
+                checkpoint_dir = os.path.join(exp_full_folder, exp_date_folder)
+                checkpoint_name = 'model_best.pth.tar'
 
-        eval_model(checkpoint_dir, checkpoint_name)
+                eval_model(checkpoint_dir, checkpoint_name)
+        else:
+            exp_full_folder = os.path.join(exp_base, 'experiments', exp_folder)
+            exp_date_folder = sorted(os.listdir(exp_full_folder))
+            exp_date_folder = exp_date_folder[-1]
+            checkpoint_dir = os.path.join(exp_full_folder, exp_date_folder)
+            checkpoint_name = 'model_best.pth.tar'
+
+            eval_model(checkpoint_dir, checkpoint_name)
