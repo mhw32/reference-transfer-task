@@ -171,7 +171,7 @@ class ColorsInContext(data.Dataset):
 
         if self.data_size is not None:
             rs = np.random.RandomState(self.random_seed)
-            n_train_total = len(data)
+            n_train_total = len(accuracy)
             indices = np.arange(n_train_total)
             n_train_total = int(math.ceil(self.data_size * n_train_total))
             indices = rs.choice(indices, size=n_train_total)

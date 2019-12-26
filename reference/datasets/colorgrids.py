@@ -167,7 +167,7 @@ class ColorgridsInContext(data.Dataset):
                     elif event['eventType'] == 'state':
                         assert image_event is None
                         image_event = event
-
+    
                 listener_choice = action_event['action']['lClicked']
                 correct_choice = image_event['state']['target']
                 
@@ -189,7 +189,7 @@ class ColorgridsInContext(data.Dataset):
             indices = rs.choice(indices, size=n_train_total)
             choices_all = choices_all[indices]
 
-        return choices_all
+        return choices_all.mean()
 
     def _load_data(self, data_dir):
         data = []
