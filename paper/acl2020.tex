@@ -67,8 +67,8 @@ TODO
 \hline
 \textbf{Model} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} & \textbf{5\%} & \textbf{1\%} \\
 \hline
-RNN & $\mathbf{86.08}$ & $\mathbf{83.60}$ & $81.72$ & $77.57$ & $75.35$ & $60.59$ \\
-RNN+ & & & & & & \\
+RNN & $86.08$ & $83.60$ & $81.72$ & $77.57$ & $75.35$ & $60.59$ \\
+RNN+ & $\mathbf{86.55}$ & $\mathbf{84.29}$ & $82.02$ & $79.26$ & $73.45$ & $56.48$ \\
 GloVe & $83.81$ & $82.78$ & $81.87$ & $\mathbf{79.45}$ & $\mathbf{77.03}$ & $56.74$ \\
 Word2Vec & $83.81$ & $82.13$ & $81.78$ & $79.43$ & $71.23$ & $56.33$ \\
 SkipThought & $82.39$ & $79.15$ & $79.00$ & $75.44$ & $69.76$ & $56.75$ \\
@@ -93,20 +93,21 @@ RoBERTa & $83.68$ & $80.03$ & $79.04$ & $69.74$ & $63.87$ & $52.45$ \\
 \hline
 \textbf{Model} & \textbf{100\%} & \textbf{50\%} & \textbf{25\%} & \textbf{10\%} \\
 \hline
-RNN & & & & \\
-GloVe & & & & \\
-Word2Vec & & & & \\
-SkipThought & & & & \\
-InferSent & & & & \\
-BERT & & & & \\
-GPT (OpenAI) & & & & \\
-GPT2 & & & & \\
-CTRL & & & & \\
-Transformer-XL & & & & \\
-XLNet & & & & \\
-XLM & & & & \\
-DistilBERT & & & & \\
-RoBERTa & & & & \\
+RNN & $39.17$ & $38.89$ & $37.72$ & $35.57$ \\
+RNN+ & $42.78$ & $\mathbf{40.28}$ & $\mathbf{38.06}$ & $\mathbf{36.11}$ \\
+GloVe & $39.72$ & $38.06$ & $35.83$ & $31.94$ \\
+Word2Vec & $36.67$ & $36.11$ & $35.28$ & $32.78$ \\
+SkipThought & $40.56$ & $35.28$ & $33.06$ & $33.33$ \\
+InferSent & $37.78$ & $35.83$ & $33.61$ & $31.39$ \\
+BERT & $36.11$ & $34.72$ & $34.44$ & $32.22$ \\
+GPT (OpenAI) & $40.83$ & $34.72$ & $34.44$ & $33.89$ \\
+GPT2 & $37.22$ & $36.11$ & $36.11$ & $30.28$ \\
+CTRL & $41.94$ & $33.06$ & $31.67$ & $30.28$ \\
+Transformer-XL & $36.39$ & $35.00$ & $32.78$ & $32.50$ \\
+XLNet & $\mathbf{43.33}$ & $36.67$ & $35.28$ & $34.17$ \\
+XLM & $38.61$ & $36.94$ & $36.38$ & $29.72$ \\
+DistilBERT & $38.61$ & $37.22$ & $33.89$ & $32.50$ \\
+RoBERTa & $39.44$ & $38.89$ & $34.44$ & $33.61$ \\
 \hline
 \end{tabular}
 \caption{\label{table:colors} Evaluation of several language representations on the ColorGrids in Context dataset. We vary the amount of training data used in transfer learning from 100\% (2.3k examples) to 10\% (230 examples).}
