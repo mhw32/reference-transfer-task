@@ -85,7 +85,8 @@ class ColorgridsInContext(data.Dataset):
 
         if not os.path.isfile(cache_clean_data):
             raw_data = self._load_data(self.data_dir)
-            texts, images1, images2, images3, labels = self._prune_data(raw_data, self.context_condition)
+            texts, images1, images2, images3, labels = \
+                self._prune_data(raw_data, self.context_condition)
             with open(cache_clean_data, 'wb') as fp:
                 pickle.dump({
                     'texts': texts,
@@ -168,7 +169,9 @@ class ColorgridsInContext(data.Dataset):
                         assert image_event is None
                         image_event = event
     
+                listener_order = image_event['state']['listenerOrder']
                 listener_choice = action_event['action']['lClicked']
+                listener_choice = listener_order[listener_choice]
                 correct_choice = image_event['state']['target']
                 
                 condition = image_event['state']['condition']['name'].lower()
@@ -219,8 +222,10 @@ class ColorgridsInContext(data.Dataset):
                     elif event['eventType'] == 'state':
                         assert image_event is None
                         image_event = event
-
+                 
+                listener_order = image_event['state']['listenerOrder']
                 listener_choice = action_event['action']['lClicked']
+                listener_choice = listener_order[listener_choice]
                 correct_choice = image_event['state']['target']
                 
                 if listener_choice != correct_choice:
