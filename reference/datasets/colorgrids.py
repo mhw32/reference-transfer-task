@@ -167,7 +167,7 @@ class ColorgridsInContext(data.Dataset):
                     elif event['eventType'] == 'state':
                         assert image_event is None
                         image_event = event
-
+    
                 listener_choice = action_event['action']['lClicked']
                 correct_choice = image_event['state']['target']
                 
@@ -179,17 +179,7 @@ class ColorgridsInContext(data.Dataset):
                 choices_all.append(correct_choice == listener_choice)
         
         choices_all = np.array(choices_all).astype(np.float)
-        choices_all = self._process_splits(choices_all)
-
-        if self.data_size is not None:
-            rs = np.random.RandomState(self.random_seed)
-            n_train_total = len(choices_all)
-            indices = np.arange(n_train_total)
-            n_train_total = int(math.ceil(self.data_size * n_train_total))
-            indices = rs.choice(indices, size=n_train_total)
-            choices_all = choices_all[indices]
-
-        return choices_all
+        return choices_all.mean()
 
     def _load_data(self, data_dir):
         data = []
@@ -410,10 +400,8 @@ class ColorgridsInContext(data.Dataset):
 
 
 if __name__ == "__main__":
-    for data_size in [None, 0.5, 0.25, 0.1, 0.05, 0.01]:
-        dataset = ColorgridsInContext(
-            '/mnt/fs5/wumike/datasets/colorgrids_in_context',
-            data_size = data_size,
-        )
-        print('length', len(dataset))
-        print('human accuracy', dataset.get_human_accuracy())
+    dataset = ColorgridsInContext(
+        '/mnt/fs5/wumike/datasets/colorgrids_in_context',
+    )
+    print('length', len(dataset))
+    print('human accuracy', dataset.get_human_accuracy())
