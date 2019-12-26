@@ -100,7 +100,7 @@ if __name__ == "__main__":
     exp_base = '/mnt/fs5/wumike/reference/trained_models/12_22'
     data_dir = '/mnt/fs5/wumike/datasets'
 
-    for data_size in [None, 0.5, 0.25, 0.1, 0.05, 0.1]:
+    for data_size in [None, 0.5, 0.25, 0.1, 0.05, 0.01]:
         exp_name = f'{args.dataset}_vanilla+_vanilla+_size{data_size}_seed{args.seed}'
         
         config_dict = build_config(
@@ -108,7 +108,7 @@ if __name__ == "__main__":
             exp_name,
             args.dataset,
             data_dir,
-            data_size = args.data_size,
+            data_size = data_size,
             context_condition = 'all',
             split_mode = 'easy',
             sneak_peak = True,
