@@ -166,8 +166,18 @@ class ColorsInContext(data.Dataset):
 
         df = df.dropna()
 
-        accuracy = np.asarray(df['outcome']).astype(np.float).mean()
-        return accuracy
+        accuracy = np.asarray(df['outcome']).astype(np.float)
+        accuracy = self._process_splits(accuracy)
+
+        if self.data_size is not None:
+            rs = np.random.RandomState(self.random_seed)
+            n_train_total = len(data)
+            indices = np.arange(n_train_total)
+            n_train_total = int(math.ceil(self.data_size * n_train_total))
+            indices = rs.choice(indices, size=n_train_total)
+            accuracy = accuracy[indices]
+        
+        return accuracy.mean()
 
     def _process_splits(self, data):
         rs = np.random.RandomState(self.random_seed)
@@ -398,6 +408,11 @@ def clean_tokens(tokens):
 
 
 if __name__ == "__main__":
-    dataset = ColorsInContext('/mnt/fs5/wumike/datasets/colors_in_context')
-    print(len(dataset))
-    dataset.__getitem__(0)
+    for data_size in [None, 0.5, 0.25, 0.1, 0.05, 0.01]:
+        dataset = ColorsInContext(
+            '/mnt/fs5/wumike/datasets/colors_in_context',
+            data_size = data_size,
+        )
+        print('length', len(dataset))
+        print('human accuracy', dataset.get_human_accuracy())
+

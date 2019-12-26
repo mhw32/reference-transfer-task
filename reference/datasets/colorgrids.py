@@ -146,6 +146,10 @@ class ColorgridsInContext(data.Dataset):
         self.text_raw = text_raw
         self.text = text
 
+    def get_human_accuracy(self):
+        raw_data = self._load_data(self.data_dir)
+        breakpoint()
+
     def _load_data(self, data_dir):
         data = []
         for line in open(os.path.join(data_dir, 'processed1.json'), 'r'):
@@ -365,7 +369,10 @@ class ColorgridsInContext(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = ColorgridsInContext('/mnt/fs5/wumike/datasets/colorgrids_in_context')
-    print(len(dataset))
-    print(dataset.__getitem__(25)[-1])
-    print(dataset.__gettext__(25))
+    for data_size in [None, 0.5, 0.25, 0.1, 0.05, 0.01]:
+        dataset = ColorgridsInContext(
+            '/mnt/fs5/wumike/datasets/colorgrids_in_context',
+            data_size = data_size,
+        )
+        print('length', len(dataset))
+        print('human accuracy', dataset.get_human_accuracy())
