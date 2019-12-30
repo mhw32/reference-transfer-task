@@ -190,8 +190,15 @@ if __name__ == "__main__":
         for text_model in language_models:
             exp_name = f'{args.dataset}_{image_model}_{text_model}_size{args.data_size}_seed{args.seed}'
            
-            pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{image_model}'
-            pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{text_model}'
+            if image_model == 'vanilla':
+                pretrain_image_embedding_dir = None
+            else:
+                pretrain_image_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{image_model}'
+            
+            if text_model == 'vanilla':
+                pretrain_text_embedding_dir = None
+            else:
+                pretrain_text_embedding_dir = f'/mnt/fs5/wumike/reference/pretrain/{args.dataset}/{text_model}'
                
             config_dict = build_config(
                 exp_base, 
