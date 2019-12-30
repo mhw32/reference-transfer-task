@@ -38,7 +38,7 @@ LANGUAGE_MODELS = [
 
 
 IMAGE_MODELS = [
-    'vae_coco',
+    'vae',
 ]
 
 MULTIMODAL_MODELS = [
@@ -48,7 +48,7 @@ MULTIMODAL_MODELS = [
 ]
 
 PRETRAIN_IMAGE_DIM_DICT = {
-    'vae_coco': 256,
+    'vae': 256,
 }
 
 PRETRAIN_TEXT_DIM_DICT = {

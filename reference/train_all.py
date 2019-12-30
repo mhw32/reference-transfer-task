@@ -43,7 +43,7 @@ IMAGE_MODELS = [
     'resnet',
     'ir_imagenet',
     'la_imagenet',
-    'vae_coco',
+    'vae',
 ]
 
 MULTIMODAL_MODELS = [
@@ -58,7 +58,7 @@ PRETRAIN_IMAGE_DIM_DICT = {
     'resnet': 512,
     'ir_imagenet': 128,
     'la_imagenet': 128,
-    'vae_coco': 256,
+    'vae': 256,
 }
 
 PRETRAIN_TEXT_DIM_DICT = {
