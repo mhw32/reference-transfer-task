@@ -38,7 +38,7 @@ LANGUAGE_MODELS = [
 
 
 IMAGE_MODELS = [
-    'vae_coco,'
+    'vae_coco',
 ]
 
 MULTIMODAL_MODELS = [

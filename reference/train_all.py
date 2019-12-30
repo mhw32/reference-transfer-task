@@ -43,7 +43,7 @@ IMAGE_MODELS = [
     'resnet',
     'ir_imagenet',
     'la_imagenet',
-    'vae_coco'
+    'vae_coco',
 ]
 
 MULTIMODAL_MODELS = [
